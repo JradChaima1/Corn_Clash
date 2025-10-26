@@ -1,0 +1,135 @@
+import { Scene, GameObjects } from 'phaser';
+
+interface GameOverData {
+  winner: string;
+  player1Score: number;
+  player2Score: number;
+  reason?: string; // 'completed' | 'disconnect'
+}
+
+export class MultiplayerGameOver extends Scene {
+  private background!: GameObjects.Image;
+
+  constructor() {
+    super('MultiplayerGameOver');
+  }
+
+  create(data: GameOverData) {
+    const { width, height } = this.scale;
+
+    // Background
+    this.background = this.add.image(width / 2, height / 2, 'kitchen');
+    this.background.setDisplaySize(width, height);
+    this.background.setAlpha(0.7);
+
+    // Check if game ended due to disconnect
+    if (data.reason === 'disconnect') {
+      // Disconnect message
+      this.add
+        .text(width / 2, height * 0.3, 'OPPONENT LEFT', {
+          fontFamily: 'Arial Black',
+          fontSize: '48px',
+          color: '#FF6B6B',
+          stroke: '#000000',
+          strokeThickness: 10,
+          align: 'center',
+        })
+        .setOrigin(0.5);
+
+      this.add
+        .text(width / 2, height * 0.45, 'The other player disconnected', {
+          fontFamily: 'Arial',
+          fontSize: '24px',
+          color: '#FFFFFF',
+          stroke: '#000000',
+          strokeThickness: 6,
+          align: 'center',
+        })
+        .setOrigin(0.5);
+    } else {
+      // Normal game over - show winner
+      const winnerColor = data.winner === 'Player 1' ? '#FF6B6B' : data.winner === 'Player 2' ? '#4ECDC4' : '#FFD700';
+
+      this.add
+        .text(width / 2, height * 0.25, 'GAME OVER!', {
+          fontFamily: 'Arial Black',
+          fontSize: '56px',
+          color: '#FFD700',
+          stroke: '#000000',
+          strokeThickness: 10,
+          align: 'center',
+        })
+        .setOrigin(0.5);
+
+      this.add
+        .text(width / 2, height * 0.4, data.winner === 'Tie' ? "IT'S A TIE!" : `${data.winner.toUpperCase()} WINS!`, {
+          fontFamily: 'Arial Black',
+          fontSize: '42px',
+          color: winnerColor,
+          stroke: '#000000',
+          strokeThickness: 8,
+          align: 'center',
+        })
+        .setOrigin(0.5);
+    }
+
+    // Scores
+    this.add
+      .text(width / 2, height * 0.55, 'FINAL SCORES', {
+        fontFamily: 'Arial Black',
+        fontSize: '28px',
+        color: '#FFFFFF',
+        stroke: '#000000',
+        strokeThickness: 6,
+        align: 'center',
+      })
+      .setOrigin(0.5);
+
+    this.add
+      .text(width / 2, height * 0.63, `Player 1: ${data.player1Score}`, {
+        fontFamily: 'Arial',
+        fontSize: '32px',
+        color: '#FF6B6B',
+        stroke: '#000000',
+        strokeThickness: 6,
+        align: 'center',
+      })
+      .setOrigin(0.5);
+
+    this.add
+      .text(width / 2, height * 0.71, `Player 2: ${data.player2Score}`, {
+        fontFamily: 'Arial',
+        fontSize: '32px',
+        color: '#4ECDC4',
+        stroke: '#000000',
+        strokeThickness: 6,
+        align: 'center',
+      })
+      .setOrigin(0.5);
+
+    // Return to menu button
+    const menuButton = this.add
+      .text(width / 2, height * 0.85, 'BACK TO MENU', {
+        fontFamily: 'Arial Black',
+        fontSize: '28px',
+        color: '#FFFFFF',
+        backgroundColor: '#000000',
+        stroke: '#FFD700',
+        strokeThickness: 4,
+        padding: { x: 30, y: 15 },
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
+
+    menuButton
+      .on('pointerover', () => {
+        menuButton.setScale(1.1);
+      })
+      .on('pointerout', () => {
+        menuButton.setScale(1);
+      })
+      .on('pointerdown', () => {
+        this.scene.start('ModeSelect');
+      });
+  }
+}
