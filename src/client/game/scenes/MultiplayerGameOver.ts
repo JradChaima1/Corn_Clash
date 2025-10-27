@@ -6,13 +6,31 @@ interface GameOverData {
   player1Score: number;
   player2Score: number;
   reason?: string; // 'completed' | 'disconnect'
+  gameId?: string;
 }
 
 export class MultiplayerGameOver extends Scene {
   private background!: GameObjects.Image;
+  private gameId: string | null = null;
 
   constructor() {
     super('MultiplayerGameOver');
+  }
+
+  init(data: GameOverData) {
+    this.gameId = data.gameId || null;
+  }
+
+  shutdown() {
+    // Ensure game is ended on shutdown
+    if (this.gameId) {
+      console.log(`[GameOver] Ending game ${this.gameId} on shutdown`);
+      void fetch(`/api/multiplayer/end?gameId=${this.gameId}`, {
+        method: 'POST',
+      }).catch((err) => {
+        console.error('[GameOver] Error ending game on shutdown:', err);
+      });
+    }
   }
 
   create(data: GameOverData) {

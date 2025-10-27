@@ -24,6 +24,10 @@ export type GameState = {
   status: 'waiting' | 'playing' | 'finished';
   player1Id: string | null;
   player2Id: string | null;
+  player1Ready: number | null;
+  player2Ready: number | null;
+  lastActivity1: number;
+  lastActivity2: number;
   player1Score: number;
   player2Score: number;
   player1Position: number;
@@ -31,6 +35,7 @@ export type GameState = {
   timeRemaining: number;
   popcornItems: PopcornItem[];
   startTime: number | null;
+  createdAt: number;
   winner: string | null;
 };
 
@@ -54,6 +59,13 @@ export type GameStateResponse = {
   success: boolean;
   gameState: GameState;
   playerRole: PlayerRole;
+  disconnected?: boolean;
+  disconnectedPlayerId?: string | null;
+};
+
+export type DisconnectInfo = {
+  disconnected: boolean;
+  playerId?: string | null;
 };
 
 export type UpdatePositionRequest = {
@@ -63,4 +75,12 @@ export type UpdatePositionRequest = {
 export type UpdatePositionResponse = {
   success: boolean;
   gameState: GameState;
+};
+
+export type ReadyResult = {
+  success: boolean;
+  bothReady: boolean;
+  startTime?: number;
+  timeout?: boolean;
+  message?: string;
 };

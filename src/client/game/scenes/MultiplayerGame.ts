@@ -59,9 +59,20 @@ export class MultiplayerGame extends Scene {
 
   shutdown() {
     // Clean up intervals when scene is destroyed
+    console.log('[MultiplayerGame] Shutdown called');
     if (this.waitingCheckInterval) {
       clearInterval(this.waitingCheckInterval);
       this.waitingCheckInterval = null;
+    }
+    
+    // CRITICAL: Leave game on shutdown to clean up Redis keys
+    if (this.gameId) {
+      console.log(`[MultiplayerGame] Leaving game ${this.gameId} on shutdown`);
+      void fetch(`/api/multiplayer/leave?gameId=${this.gameId}`, {
+        method: 'POST',
+      }).catch((err) => {
+        console.error('[MultiplayerGame] Error leaving game on shutdown:', err);
+      });
     }
   }
 
@@ -82,7 +93,7 @@ export class MultiplayerGame extends Scene {
     // Cooking pot on top of counter
     this.pot = this.add.image(width / 2, height - 120, 'pot');
     this.pot.setScale(0.3);
-    
+
     // Add physics to pot to block player movement
     this.physics.add.existing(this.pot, true); // true = static body
     (this.pot.body as Phaser.Physics.Arcade.StaticBody).setSize(
@@ -707,6 +718,7 @@ export class MultiplayerGame extends Scene {
       winner,
       player1Score: this.player1Score,
       player2Score: this.player2Score,
+      gameId: this.gameId,
       reason: 'completed',
     });
   }
@@ -745,8 +757,8 @@ export class MultiplayerGame extends Scene {
       const response = await fetch(`/api/multiplayer/state?gameId=${this.gameId}`);
       if (!response.ok) {
         this.consecutiveFailedFetches++;
-        // If opponent disconnected (5 failed fetches = ~1.6 seconds)
-        if (this.consecutiveFailedFetches >= 5 && this.isGameActive) {
+        // If opponent disconnected (3 failed fetches = ~0.5 seconds)
+        if (this.consecutiveFailedFetches >= 3 && this.isGameActive) {
           console.log('[MultiplayerGame] Opponent disconnected, showing message...');
           this.handleDisconnect();
         }
@@ -757,6 +769,13 @@ export class MultiplayerGame extends Scene {
 
       const data = await response.json();
       if (data.success && data.gameState) {
+        // Check for server-detected disconnect
+        if (data.disconnected && this.isGameActive) {
+          console.log('[MultiplayerGame] Server detected disconnect:', data.disconnectedPlayerId);
+          this.handleDisconnect();
+          return;
+        }
+
         // CRITICAL: Verify both players exist - if not, game shouldn't have started
         if (data.gameState.player1Id === null || data.gameState.player2Id === null) {
           console.error(
@@ -810,8 +829,8 @@ export class MultiplayerGame extends Scene {
       }
     } catch (error) {
       this.consecutiveFailedFetches++;
-      // If opponent disconnected (5 failed fetches = ~1.6 seconds)
-      if (this.consecutiveFailedFetches >= 5 && this.isGameActive) {
+      // If opponent disconnected (3 failed fetches = ~0.5 seconds)
+      if (this.consecutiveFailedFetches >= 3 && this.isGameActive) {
         console.log('[MultiplayerGame] Opponent disconnected (error), showing message...');
         this.handleDisconnect();
       }
@@ -858,6 +877,7 @@ export class MultiplayerGame extends Scene {
         player1Score: this.player1Score,
         player2Score: this.player2Score,
         reason: 'disconnect',
+        gameId: this.gameId,
       });
     });
   }
