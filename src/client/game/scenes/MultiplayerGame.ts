@@ -657,9 +657,22 @@ export class MultiplayerGame extends Scene {
       loop: true,
     });
 
-    // Wait 1 second to ensure ALL score updates reach the server
+    // CRITICAL: Send final score update FIRST before fetching
+    console.log('[MultiplayerGame] Sending final score update...');
+    try {
+      await fetch(`/api/multiplayer/score?gameId=${this.gameId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ score: this.playerRole === 'player1' ? this.player1Score : this.player2Score }),
+      });
+      console.log(`[MultiplayerGame] Final score sent: ${this.playerRole === 'player1' ? this.player1Score : this.player2Score}`);
+    } catch (error) {
+      console.error('[MultiplayerGame] Error sending final score:', error);
+    }
+
+    // Wait 1.5 seconds to ensure BOTH players' final scores reach the server
     console.log('[MultiplayerGame] Waiting for all scores to sync...');
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1500));
 
     // Fetch final scores from server - this is the authoritative source
     let finalP1Score = 0;
@@ -677,7 +690,15 @@ export class MultiplayerGame extends Scene {
           console.log(
             `[MultiplayerGame] Server authoritative scores: P1=${finalP1Score}, P2=${finalP2Score}`
           );
+        } else {
+          console.warn('[MultiplayerGame] Game state not found, using local scores');
+          finalP1Score = this.player1Score;
+          finalP2Score = this.player2Score;
         }
+      } else {
+        console.warn('[MultiplayerGame] Failed to fetch game state, using local scores');
+        finalP1Score = this.player1Score;
+        finalP2Score = this.player2Score;
       }
     } catch (error) {
       console.error('Error fetching final scores:', error);
@@ -699,15 +720,10 @@ export class MultiplayerGame extends Scene {
 
     console.log(`[MultiplayerGame] Winner: ${winner}, starting GameOver scene`);
 
-    // Clean up game from server
-    try {
-      await fetch(`/api/multiplayer/end?gameId=${this.gameId}`, {
-        method: 'POST',
-      });
-      console.log(`[MultiplayerGame] Game ${this.gameId} cleaned up from server`);
-    } catch (error) {
-      console.error('[MultiplayerGame] Failed to clean up game:', error);
-    }
+    // DON'T clean up game immediately - let it expire naturally
+    // This ensures both players can fetch final scores
+    // The game will be cleaned up by TTL (2 minutes) or when players leave
+    console.log(`[MultiplayerGame] Leaving game cleanup to TTL or player leave`)
 
     // Stop loading animation
     if (dotAnimation) {

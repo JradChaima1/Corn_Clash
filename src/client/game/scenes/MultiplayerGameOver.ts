@@ -19,10 +19,24 @@ export class MultiplayerGameOver extends Scene {
 
   init(data: GameOverData) {
     this.gameId = data.gameId || null;
+
+    // Clean up game after 5 seconds to ensure both players see scores
+    if (this.gameId) {
+      console.log(`[GameOver] Scheduling game cleanup for ${this.gameId} in 5 seconds`);
+      setTimeout(() => {
+        if (this.gameId) {
+          fetch(`/api/multiplayer/end?gameId=${this.gameId}`, {
+            method: 'POST',
+          }).catch((err) => {
+            console.error('[GameOver] Error ending game:', err);
+          });
+        }
+      }, 5000);
+    }
   }
 
   shutdown() {
-    // Ensure game is ended on shutdown
+    // Ensure game is ended on shutdown (if player leaves before 5 second timer)
     if (this.gameId) {
       console.log(`[GameOver] Ending game ${this.gameId} on shutdown`);
       void fetch(`/api/multiplayer/end?gameId=${this.gameId}`, {
@@ -126,30 +140,7 @@ export class MultiplayerGameOver extends Scene {
       })
       .setOrigin(0.5);
 
-    // Return to menu button
-    const menuButton = this.add
-      .text(width / 2, height * 0.85, 'BACK TO MENU', {
-        fontFamily: 'Arial Black',
-        fontSize: '28px',
-        color: '#FFFFFF',
-        backgroundColor: '#000000',
-        stroke: '#FFD700',
-        strokeThickness: 4,
-        padding: { x: 30, y: 15 },
-      })
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true });
 
-    menuButton
-      .on('pointerover', () => {
-        menuButton.setScale(1.1);
-      })
-      .on('pointerout', () => {
-        menuButton.setScale(1);
-      })
-      .on('pointerdown', () => {
-        this.scene.start('ModeSelect');
-      });
 
     // Main Menu button using ButtonFactory
     const mainMenuButton = ButtonFactory.createButton(

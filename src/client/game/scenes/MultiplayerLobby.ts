@@ -28,7 +28,7 @@ export class MultiplayerLobby extends Scene {
     this.isReady = false;
     this.bothPlayersPresent = false;
     this.readyButton = null;
-    
+
     if (this.pollTimer) {
       this.pollTimer.remove();
     }
@@ -159,6 +159,15 @@ export class MultiplayerLobby extends Scene {
         try {
           console.log(`[Lobby] Polling game state for ${this.gameId}...`);
           const response = await fetch(`/api/multiplayer/state?gameId=${this.gameId}`);
+
+          // If game not found (404), the other player left - restart matchmaking
+          if (response.status === 404) {
+            console.log(`[Lobby] Game ${this.gameId} no longer exists - other player left`);
+            this.pollTimer.remove();
+            this.restartMatchmaking();
+            return;
+          }
+
           if (!response.ok) {
             console.error(`[Lobby] Poll failed with status ${response.status}`);
             return;
@@ -167,9 +176,25 @@ export class MultiplayerLobby extends Scene {
           const data = await response.json();
           console.log(`[Lobby] Poll response:`, data);
 
+          // If game state is null or not successful, restart matchmaking
+          if (!data.success || !data.gameState) {
+            console.log(`[Lobby] Game ${this.gameId} is invalid - restarting matchmaking`);
+            this.pollTimer.remove();
+            this.restartMatchmaking();
+            return;
+          }
+
           // Check if both players are present
           const bothPresent = data.gameState.player1Id !== null && data.gameState.player2Id !== null;
-          
+
+          // If we had both players but now one is missing, restart matchmaking
+          if (this.bothPlayersPresent && !bothPresent) {
+            console.log(`[Lobby] Player left the lobby - restarting matchmaking`);
+            this.pollTimer.remove();
+            this.restartMatchmaking();
+            return;
+          }
+
           if (bothPresent && !this.bothPlayersPresent) {
             // Both players just joined - show ready button
             this.bothPlayersPresent = true;
@@ -304,6 +329,40 @@ export class MultiplayerLobby extends Scene {
 
     // Return to menu
     this.scene.start('ModeSelect');
+  }
+
+  private restartMatchmaking(): void {
+    console.log('[Lobby] Restarting matchmaking...');
+
+    // Hide ready button if it exists
+    if (this.readyButton) {
+      this.readyButton.destroy();
+      this.readyButton = null;
+    }
+
+    // Reset state
+    this.gameId = null;
+    this.playerId = null;
+    this.playerRole = null;
+    this.isReady = false;
+    this.bothPlayersPresent = false;
+
+    // Update status text
+    this.statusText.setText('Finding opponent...');
+    this.statusText.setColor('#FFFFFF');
+
+    // Restart loading animation
+    this.tweens.killTweensOf(this.statusText);
+    this.tweens.add({
+      targets: this.statusText,
+      alpha: 0.5,
+      duration: 1000,
+      yoyo: true,
+      repeat: -1,
+    });
+
+    // Join a new game
+    this.joinGame();
   }
 
   private startMultiplayerGame(): void {

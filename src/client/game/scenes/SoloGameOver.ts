@@ -8,10 +8,7 @@ interface SoloGameOverData {
 
 export class SoloGameOver extends Scene {
   private background!: Phaser.GameObjects.Image;
-  private gameOverText!: Phaser.GameObjects.Text;
-  private scoreText!: Phaser.GameObjects.Text;
   private restartText!: Phaser.GameObjects.Text;
-  private menuText!: Phaser.GameObjects.Text;
 
   constructor() {
     super('SoloGameOver');
@@ -29,7 +26,7 @@ export class SoloGameOver extends Scene {
     this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.7);
 
     // Game Over text
-    this.gameOverText = this.add
+    this.add
       .text(width / 2, height * 0.25, 'GAME OVER!', {
         fontFamily: 'Arial Black',
         fontSize: '56px',
@@ -41,7 +38,7 @@ export class SoloGameOver extends Scene {
       .setOrigin(0.5);
 
     // Score
-    this.scoreText = this.add
+    this.add
       .text(width / 2, height * 0.45, `Final Score: ${data.score}`, {
         fontFamily: 'Arial Black',
         fontSize: '40px',
@@ -65,18 +62,7 @@ export class SoloGameOver extends Scene {
       .setOrigin(0.5)
       .setInteractive({ useHandCursor: true });
 
-    // Menu button
-    this.menuText = this.add
-      .text(width / 2, height * 0.78, 'Main Menu', {
-        fontFamily: 'Arial Black',
-        fontSize: '28px',
-        color: '#FFFFFF',
-        stroke: '#000000',
-        strokeThickness: 6,
-        align: 'center',
-      })
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true });
+
 
     // Button interactions
     this.restartText
@@ -90,16 +76,7 @@ export class SoloGameOver extends Scene {
         this.scene.start('SoloGame');
       });
 
-    this.menuText
-      .on('pointerover', () => {
-        this.menuText.setScale(1.1);
-      })
-      .on('pointerout', () => {
-        this.menuText.setScale(1);
-      })
-      .on('pointerdown', () => {
-        this.scene.start('ModeSelect');
-      });
+
 
     // Blinking animation on restart text
     this.tweens.add({

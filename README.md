@@ -6,13 +6,11 @@ A fast-paced arcade game where you catch flying popcorn kernels as they explode 
 
 ---
 
----
-
 ## What Is This Game?
 
 **Popcorn Catch** is a physics-based arcade game where players control a popcorn cup to catch kernels launching from an animated cooking pot. The game features realistic physics with randomized trajectories, gravity, and rotation for each popcorn piece. Players must position their cup strategically to intercept falling kernels within a 60-second time limit.
 
-The game runs entirely within Reddit posts using Devvit's web framework, requiring no downloads or external websites. It features two distinct game modes: a solo mode for personal high-score challenges, and an online multiplayer mode where two players compete head-to-head in real-time with automatic matchmaking.
+The game runs entirely within Reddit posts using Devvit's web framework, requiring no downloads or external websites. It features two distinct game modes: a solo mode for personal high-score challenges, and an online multiplayer mode where two players compete head-to-head in real-time with automatic matchmaking and a ready-state system.
 
 ### Core Gameplay Loop
 1. Popcorn kernels launch from a shaking pot with random velocities and spin
@@ -64,6 +62,13 @@ The game runs entirely within Reddit posts using Devvit's web framework, requiri
   - Green "READY!" button appears when both players are connected
   - 30-second ready timeout with automatic reset if players don't confirm
   - Games begin immediately when both players signal ready
+- **Intelligent Lobby Recovery System**: Automatic restart of matchmaking if opponent leaves during waiting
+  - Detects when opponent disconnects before game starts (404 game not found) within 1 second
+  - Detects when game state becomes invalid or corrupted
+  - Detects when a player leaves after both were present in lobby
+  - Seamlessly returns player to matchmaking queue for new opponent
+  - Cleans up Redis keys for both players to allow immediate rejoining
+  - Prevents all stuck waiting scenarios - you'll never be left hanging
 - 60-second matchmaking timeout prevents indefinite waiting
 - Self-match prevention ensures players can't join their own games
 - "Back to Menu" button available during waiting for easy exit
@@ -172,8 +177,8 @@ The game runs entirely within Reddit posts using Devvit's web framework, requiri
 - **Menu Button**: Top-right corner for quick exit to main menu
 
 **Game Over**: After 60 seconds, view your final score with options to:
-- **Play Again**: Restart solo mode immediately
-- **Main Menu**: Return to mode selection
+- **Play Again**: Restart solo mode immediately (green pulsing button)
+- **Main Menu**: Return to main menu (green button at bottom)
 
 ### 👥 Multiplayer Mode
 
@@ -189,9 +194,16 @@ The game runs entirely within Reddit posts using Devvit's web framework, requiri
 6. Both players must click "READY!" to confirm they're prepared
 7. Status updates to "You are ready! Waiting for opponent..." with pulsing animation
 8. Game begins immediately when both players signal ready
-9. 30-second ready timeout: if both players don't ready up, matchmaking resets with "Ready timeout!" message
-10. 60-second matchmaking timeout with automatic return to menu if no opponent found
-11. "Back to Menu" button (red) available during waiting for easy exit
+9. **Intelligent Lobby Recovery System**: If opponent leaves before game starts, you're automatically returned to matchmaking
+   - Detects when opponent disconnects (404 game not found response)
+   - Detects invalid or corrupted game states
+   - Detects when a player leaves after both were present in lobby
+   - Seamlessly restarts matchmaking within 1 second without manual intervention
+   - Cleans up Redis keys for both players to allow immediate rejoining
+   - No stuck states - you'll never be left waiting indefinitely
+10. 30-second ready timeout: if both players don't ready up, matchmaking resets with "Ready timeout!" message
+11. 60-second matchmaking timeout with automatic return to menu if no opponent found
+12. "Back to Menu" button (red) available during waiting for easy exit
 
 #### Controls (Same as Solo)
 - **Keyboard**: A/D or Arrow Keys to move left/right at 300 px/s
@@ -226,7 +238,14 @@ The game runs entirely within Reddit posts using Devvit's web framework, requiri
 - Automatic cleanup of finished games from server
 
 **Network Features**:
-- **Disconnect Detection**: 3 consecutive failed fetches (~0.5 seconds) triggers client-side disconnect handling
+- **Intelligent Lobby Recovery**: Automatic restart of matchmaking if opponent leaves before game starts
+  - Detects 404 responses (game no longer exists) within 1 second
+  - Detects invalid game states and corrupted data
+  - Detects when a player leaves after both were present in lobby
+  - Seamlessly returns player to matchmaking queue
+  - Cleans up Redis keys for both players to prevent stale state
+  - Prevents indefinite waiting scenarios
+- **Disconnect Detection**: 3 consecutive failed fetches (~0.5 seconds) triggers client-side disconnect handling during gameplay
 - **Activity Tracking**: Server monitors player activity with 3-second inactivity threshold for server-side detection
 - **Graceful Degradation**: Game continues if network hiccups occur
 - **Automatic Cleanup**: Server removes old games (2-minute TTL expiry) and manages waiting queue
@@ -247,12 +266,14 @@ The game runs entirely within Reddit posts using Devvit's web framework, requiri
   - "GAME OVER!" in gold text
   - "[PLAYER] WINS!" in player's color (red/cyan)
   - Final scores displayed for both players
+  - Animated "Calculating final scores..." message with loading dots
 - **Tie Game**: "IT'S A TIE!" message in gold if scores are equal
 - **Disconnect**: "OPPONENT LEFT" message in red with explanation
   - "The other player disconnected" subtitle
   - Final scores still displayed
 - **Server Issues**: Automatic fallback to local scores if server unavailable
-- Final scores fetched from server as authoritative source (1-second sync delay)
+- Final scores fetched from server as authoritative source (1.5-second sync delay ensures both players' scores reach server)
+- Games auto-expire after 2 minutes (TTL) or when players leave - no immediate cleanup to allow score fetching
 - "BACK TO MENU" button returns to mode selection
 - "Main Menu" button (green) returns to main menu
 

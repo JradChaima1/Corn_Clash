@@ -305,22 +305,32 @@ export class MultiplayerGameManager {
     const game = await this.getGameState(gameId);
     if (!game) {
       console.log(`[Multiplayer] Game ${gameId} not found`);
+      // Still delete the player's game key in case it's stale
+      await redis.del(`${REDIS_PLAYER_GAME_PREFIX}${playerId}`);
       return false;
     }
 
-    // Delete player game key
+    // Delete leaving player's game key
     await redis.del(`${REDIS_PLAYER_GAME_PREFIX}${playerId}`);
 
-    // If game is still waiting (not started), remove the player and delete the game
+    // If game is still waiting (not started), delete the game and clean up both players
     if (game.status === 'waiting') {
-      console.log(`[Multiplayer] Game ${gameId} was waiting, deleting it`);
+      console.log(`[Multiplayer] Game ${gameId} was waiting, deleting it and cleaning up both players`);
+
+      // Clean up both players' keys
+      if (game.player1Id) {
+        await redis.del(`${REDIS_PLAYER_GAME_PREFIX}${game.player1Id}`);
+      }
+      if (game.player2Id) {
+        await redis.del(`${REDIS_PLAYER_GAME_PREFIX}${game.player2Id}`);
+      }
 
       // Remove from waiting list
       await redis.zRem(REDIS_WAITING_GAMES, [gameId]);
 
       // Delete the game
       await redis.del(`${REDIS_GAME_PREFIX}${gameId}`);
-      console.log(`[Multiplayer] Game ${gameId} deleted`);
+      console.log(`[Multiplayer] Game ${gameId} deleted, both players can rejoin`);
       return true;
     }
 
