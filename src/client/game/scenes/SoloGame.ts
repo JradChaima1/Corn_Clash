@@ -1,5 +1,6 @@
 import { Scene } from 'phaser';
 import * as Phaser from 'phaser';
+import { ButtonFactory } from '../utils/ButtonFactory';
 
 export class SoloGame extends Scene {
   // Game state
@@ -163,6 +164,31 @@ export class SoloGame extends Scene {
 
     // Add collision between player and pot (blocks movement)
     this.physics.add.collider(this.player, this.pot);
+
+    // Main Menu button (top-right corner, smaller)
+    const mainMenuButton = ButtonFactory.createButton(
+      this,
+      width - 80,
+      30,
+      'Menu',
+      0x22c55e,
+      0x16a34a,
+      120
+    );
+    mainMenuButton.setInteractive(
+      new Phaser.Geom.Rectangle(-60, -25, 120, 50),
+      Phaser.Geom.Rectangle.Contains
+    );
+    mainMenuButton.setDepth(1000);
+
+    ButtonFactory.addHoverEffect(this, mainMenuButton);
+    ButtonFactory.addClickEffect(this, mainMenuButton, () => {
+      // Pause game and return to main menu
+      this.isGameActive = false;
+      if (this.gameTimer) this.gameTimer.remove();
+      if (this.popcornSpawnTimer) this.popcornSpawnTimer.remove();
+      this.scene.start('MainMenu');
+    });
 
     // Start game
     this.startGame();

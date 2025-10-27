@@ -35,7 +35,7 @@ export class MultiplayerGameManager {
         console.log(
           `[Multiplayer] Checking game ${gameId}: status=${game.status}, player2=${game.player2Id}, scores=${game.player1Score}-${game.player2Score}`
         );
-        
+
         // Clean up old games with non-zero scores (finished games that weren't deleted)
         if (game.player1Score > 0 || game.player2Score > 0) {
           console.log(`[Multiplayer] Deleting old game ${gameId} with scores ${game.player1Score}-${game.player2Score}`);
@@ -44,7 +44,7 @@ export class MultiplayerGameManager {
           await redis.set(REDIS_WAITING_GAMES, JSON.stringify(updatedWaiting));
           continue; // Skip this game
         }
-        
+
         // Only match games that are 'waiting' with no player2 and have fresh scores (0-0)
         if (
           game.status === 'waiting' &&
@@ -168,7 +168,7 @@ export class MultiplayerGameManager {
 
   async leaveGame(gameId: string, playerId: string): Promise<boolean> {
     console.log(`[Multiplayer] Player ${playerId} leaving game ${gameId}`);
-    
+
     const game = await this.getGameState(gameId);
     if (!game) {
       console.log(`[Multiplayer] Game ${gameId} not found`);
@@ -178,13 +178,13 @@ export class MultiplayerGameManager {
     // If game is still waiting (not started), remove the player and delete the game
     if (game.status === 'waiting') {
       console.log(`[Multiplayer] Game ${gameId} was waiting, deleting it`);
-      
+
       // Remove from waiting list
       const waitingGamesStr = await redis.get(REDIS_WAITING_GAMES);
       const waitingGames: string[] = waitingGamesStr ? JSON.parse(waitingGamesStr) : [];
       const updatedWaiting = waitingGames.filter((id) => id !== gameId);
       await redis.set(REDIS_WAITING_GAMES, JSON.stringify(updatedWaiting));
-      
+
       // Delete the game
       await redis.del(`${REDIS_GAME_PREFIX}${gameId}`);
       console.log(`[Multiplayer] Game ${gameId} deleted`);
@@ -198,28 +198,28 @@ export class MultiplayerGameManager {
     } else if (game.player2Id === playerId) {
       game.player2Id = null;
     }
-    
+
     await redis.set(`${REDIS_GAME_PREFIX}${gameId}`, JSON.stringify(game));
     return true;
   }
 
   async endGame(gameId: string): Promise<boolean> {
     console.log(`[Multiplayer] Ending and deleting game ${gameId}`);
-    
+
     // Delete the game from Redis
     await redis.del(`${REDIS_GAME_PREFIX}${gameId}`);
-    
+
     // Remove from waiting list (in case it's still there)
     const waitingGamesStr = await redis.get(REDIS_WAITING_GAMES);
     const waitingGames: string[] = waitingGamesStr ? JSON.parse(waitingGamesStr) : [];
     const updatedWaiting = waitingGames.filter((id) => id !== gameId);
     await redis.set(REDIS_WAITING_GAMES, JSON.stringify(updatedWaiting));
-    
+
     console.log(`[Multiplayer] Game ${gameId} deleted from Redis`);
     return true;
   }
 
   private generateGameId(): string {
-    return `game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `game_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 }

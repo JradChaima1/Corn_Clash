@@ -1,4 +1,4 @@
-## Popcorn Catch!
+## Corn Clash 🍿
 
 A fast-paced arcade game where you catch flying popcorn kernels as they explode from a shaking pot! Built with Phaser.js and running natively on Reddit, this game offers both solo high-score challenges and real-time online multiplayer battles.
 
@@ -6,28 +6,34 @@ A fast-paced arcade game where you catch flying popcorn kernels as they explode 
 
 ---
 
+---
+
 ### What Is This Game?
 
-**Popcorn Catch** is a physics-based arcade game where players control a popcorn cup to catch kernels launching from an animated cooking pot. The game features realistic physics with randomized trajectories, gravity, and rotation for each popcorn piece. Players must position their cup strategically to intercept falling kernels within a 60-second time limit.
+**Corn Clash** is a physics-based arcade game where players control a popcorn cup to catch kernels launching from an animated cooking pot. The game features realistic physics with randomized trajectories, gravity, and rotation for each popcorn piece. Players must position their cup strategically to intercept falling kernels within a 60-second time limit.
 
 The game runs entirely within Reddit posts using Devvit's web framework, requiring no downloads or external websites. It features two distinct game modes: a solo mode for personal high-score challenges, and an online multiplayer mode where two players compete head-to-head in real-time with automatic matchmaking.
 
 **Core Gameplay Loop:**
 1. Popcorn kernels launch from a shaking pot with random velocities and spin
 2. Players move their cup left/right to catch falling kernels
-3. Each catch awards +1 point with satisfying visual feedback (particles, flash effects)
-4. 60-second timer creates intense, fast-paced sessions
-5. Game ends with final score display and options to replay or return to menu
+3. Each catch awards points with satisfying visual feedback (particles, flash effects)
+4. Special colored popcorn awards bonus points (red +10, blue +20)
+5. 60-second timer creates intense, fast-paced sessions
+6. Game ends with final score display and options to replay or return to menu
 
 **Key Gameplay Elements:**
 - **Dynamic Physics**: Each popcorn kernel (40x40px) launches with unique velocity (100-250 px/s horizontal, -300 to -450 px/s vertical) and random spin (-200 to 200 deg/s)
+- **Bonus Popcorn System**: 70% normal (+1 point), 20% red (+10 points), 10% blue (+20 points) with color-coded visual indicators
 - **Arcade Physics Engine**: Phaser's built-in system with 300 px/s² gravity creates realistic arcing trajectories with 0.3 bounce coefficient
 - **Responsive Controls**: Smooth keyboard controls (A/D or Arrow keys) with 300 px/s movement speed, plus mobile touch controls (80px diameter on-screen buttons)
-- **Visual Feedback**: 8-particle bursts, expanding flash effects (20px → 40px), and subtle screen shake (2px, 50ms) on every catch and launch
+- **Visual Feedback**: 8-particle bursts, expanding flash effects (20px → 40px), score popups for special popcorn, and subtle screen shake (2px, 50ms) on every launch
 - **Time Pressure**: 60-second countdown (displayed in MM:SS format) creates intense, fast-paced gameplay sessions
 - **Collision Detection**: Overlap-based physics with custom hitbox sizing (80% width, 60% height of cup)
 - **Warm Kitchen Theme**: Cozy kitchen background with animated pot, counter, and cream color scheme (#FFF8DC)
-- **Spawn Randomization**: Kernels spawn every 0.8-1.2 seconds with randomized intervals for unpredictable gameplay
+- **Spawn Randomization**: Kernels spawn every 0.4-0.7 seconds with randomized intervals for unpredictable, fast-paced gameplay
+- **Modern Loading Screen**: Professional loading experience with centered app icon (scaled to 128x128px) on pure black background (#000000), featuring a glowing pulsing effect (1.0→1.05 scale, 0.4→0.32 alpha, 2s cycle) and real-time cyan-to-blue gradient progress bar (400x20px with rounded corners, multi-layer glow effect)
+- **Menu Button**: Quick access to main menu from solo mode via green "Menu" button in top-right corner
 
 ### What Makes This Game Innovative
 
@@ -40,6 +46,8 @@ The game runs entirely within Reddit posts using Devvit's web framework, requiri
 - Built with Phaser.js (v3.88.2) for smooth 60 FPS gameplay in the browser
 - 800x600 canvas with responsive scaling (Phaser.Scale.FIT) adapts to any screen size
 - Moderators can create new game posts via subreddit menu action
+- Custom splash screen with "Corn Clash" branding and "🍿 Play Now" button
+- Professional loading screen with centered icon (128x128px scaled proportionally), glowing pulsing animation (1.0→1.05 scale, 0.4→0.32 alpha, 2s Sine.easeInOut cycle), and real-time cyan-to-blue gradient progress bar (400x20px with rounded corners, multi-layer glow effect with alpha 0.6 and 0.3 layers) on pure black background (#000000)
 
 **🎯 Dual Game Mode Architecture**
 - **Solo Mode**: Single-player arcade challenge with full-screen movement (100x100px cup)
@@ -65,32 +73,39 @@ The game runs entirely within Reddit posts using Devvit's web framework, requiri
 **🎲 Server-Authoritative Multiplayer**
 - All game logic runs on the server (MultiplayerGameManager singleton) to prevent cheating
 - Server uses Redis for persistent game state storage (via Devvit's @devvit/web/server)
-- Clients poll game state every 500ms (10 frames) via `/api/multiplayer/state` for smooth synchronization
+- Clients poll game state every 500ms via `/api/multiplayer/state` for smooth synchronization
 - Both players see identical game state with server-controlled start time for perfect sync
 - Fair gameplay guaranteed through centralized authority (Express.js 5.1.0 backend)
 - Position updates throttled (every 10 frames) via `/api/multiplayer/position` to reduce network load
 - Score updates sent immediately on catch via `/api/multiplayer/score` for real-time feedback
 - Disconnect detection (5 consecutive failed fetches = ~1.6 seconds) with graceful game termination
 - Server fetches authoritative final scores with 1-second delay to ensure all updates are synced
+- Automatic cleanup of old games with non-zero scores to prevent stale matchmaking
 
 **🌊 Advanced Physics Simulation**
 - **Randomized Launch Mechanics**: Each kernel has unique trajectory
   - Horizontal: 100-250 px/s in random direction
   - Vertical: -300 to -450 px/s upward launch
   - Angular velocity: -200 to 200 deg/s rotation
+- **Bonus Popcorn Types**: Three types with different point values
+  - Normal (white): +1 point (70% spawn rate)
+  - Red: +10 points (20% spawn rate)
+  - Blue: +20 points (10% spawn rate)
 - **Arcade Physics Engine**: Phaser's built-in system with 300 px/s² gravity
 - **Bounce Dynamics**: 0.3 coefficient for realistic bouncing
 - **Collision Detection**: Overlap-based with custom hitbox sizing (80% width, 60% height)
 - **Off-Screen Cleanup**: Automatic removal when kernels leave play area (checked every 100ms)
 - **Max Popcorn Limit**: 50 active kernels on screen at once
+- **Fast Spawn Rate**: Kernels spawn every 0.4-0.7 seconds for intense gameplay
 
 **✨ Layered Visual Polish**
 - **Multi-Axis Pot Animation**: Simultaneous horizontal wobble (±4px, 80ms), vertical bounce (±2px, 100ms), and rotation (±2°, 120ms) with Sine.easeInOut
 - **Particle System**: 8-particle burst on each catch with gravity (200 px/s²), scaling (0.15 → 0), and 400ms lifespan
-- **Flash Effects**: Expanding yellow circles (#FFFF00) with alpha fade (0.6 → 0, 20px → 40px over 200ms)
+- **Flash Effects**: Color-coded expanding circles with alpha fade (0.6 → 0, 20px → 40px over 200ms) - yellow for normal, red/blue for special popcorn
+- **Score Popups**: Floating "+10" or "+20" text appears for special popcorn catches with color-matched styling
 - **Screen Shake**: Subtle 2-pixel camera shake on popcorn launch (50ms duration, 0.002 intensity)
 - **Idle Animations**: Players float with 800ms sine-wave cycles (±2px vertical, offset by 400ms in multiplayer)
-- **Smooth Interpolation**: Position updates use 50ms linear tweens for fluid movement in multiplayer
+- **Smooth Interpolation**: Position updates use 150ms linear tweens for fluid movement in multiplayer
 
 **🏆 Split-Screen Territory System (Multiplayer)**
 - Multiplayer divides the 800px screen into two equal zones (400px each)
@@ -117,20 +132,22 @@ The game runs entirely within Reddit posts using Devvit's web framework, requiri
 - Warm, inviting color palette (#FFF8DC cream background)
 - Kitchen counter (full width, 100px height) positioned 50px from bottom
 - Large pot (30% scale) positioned 120px from bottom with continuous multi-axis animation
-- Popcorn kernels sized at 40x40px for visibility
+- Popcorn kernels sized at 40x40px for visibility with color tints for special types
 - Player cups sized at 100x100px for balanced difficulty (consistent across both modes)
 - Gold score text (#FFD700) in solo mode, team colors (#FF6B6B, #4ECDC4) in multiplayer
 - White timer text (#FFFFFF) with black stroke (6px thickness) for high contrast
 - All assets loaded from `/assets/` directory (kitchen_background.png, large_pot.png, single_corn.png, empty_popcorn_cup.png, counter1.png)
+- Custom app icon (myiconimage.png) and splash screen (mybgimage.png) for Reddit integration
+- Loading screen features pure black background (#000000) with centered glowing icon and cyan-to-blue gradient progress bar with multi-layer glow effect for professional first impression
 
 **🎮 Intuitive Scene Flow**
-- **Boot Scene** (`src/client/game/scenes/Boot.ts`): Loads initial background asset (bg.png) and transitions to Preloader
-- **Preloader Scene** (`Preloader.ts`): Displays progress bar (464px wide) while fetching game assets from `/assets/` (kitchen_background.png, large_pot.png, single_corn.png, empty_popcorn_cup.png, counter1.png) with error handling
-- **Main Menu** (`MainMenu.ts`): Click-to-start splash screen with game title, controls explanation, and blinking "Click to Start!" text (alpha animation 0.3-1.0, 800ms)
+- **Boot Scene** (`src/client/game/scenes/Boot.ts`): Loads app icon (myiconimage.png) for loading screen and transitions to Preloader
+- **Preloader Scene** (`Preloader.ts`): Displays modern loading screen with pure black background (#000000), centered app icon scaled proportionally to 128x128px target size, glowing duplicate layer behind icon (1.1x scale, 0.4 alpha) with pulsing animation (1.0→1.05 scale, 0.4→0.32 alpha, 2s Sine.easeInOut cycle), and cyan-to-blue gradient progress bar (400x20px with rounded corners, gradient from #00FFFF to #0080FF, multi-layer glow effect with alpha 0.6 and 0.3 layers, animated fill from 4px to 396px width) while fetching game assets from `/assets/` (kitchen_background.png, large_pot.png, single_corn.png, empty_popcorn_cup.png, counter1.png) with error handling
+- **Main Menu** (`MainMenu.ts`): Click-to-start splash screen with "POPCORN CATCH!" title, controls explanation, and blinking "Click to Start!" text (alpha animation 0.3-1.0, 800ms)
 - **Mode Select** (`ModeSelect.ts`): Choose between Solo Mode (red #FF6B6B button) or Multiplayer (cyan #4ECDC4 button) with hover effects (1.05x scale) and descriptive subtitles
-- **Solo Game** (`SoloGame.ts`): Immediate gameplay with full-screen movement (x: 50-750) and randomized popcorn spawning
+- **Solo Game** (`SoloGame.ts`): Immediate gameplay with full-screen movement (x: 50-750), randomized popcorn spawning, and bonus popcorn system
 - **Multiplayer Lobby** (`MultiplayerLobby.ts`): Matchmaking screen with "Finding opponent..." status (alpha animation), player role display, back button with proper cleanup, and 60-second timeout
-- **Multiplayer Game** (`MultiplayerGame.ts`): Split-screen gameplay with real-time synchronization (500ms polling), disconnect detection, and server-controlled start time
+- **Multiplayer Game** (`MultiplayerGame.ts`): Split-screen gameplay with real-time synchronization (500ms polling), disconnect detection, server-controlled start time, and bonus popcorn system
 - **Game Over Screens**: 
   - **Solo** (`SoloGameOver.ts`): Shows final score with "Play Again" (green #00FF00, blinking) and "Main Menu" (white) buttons
   - **Multiplayer** (`MultiplayerGameOver.ts`): Shows winner (color-coded), both scores, disconnect handling ("OPPONENT LEFT" message), and "Back to Menu" button
@@ -149,17 +166,24 @@ The game runs entirely within Reddit posts using Devvit's web framework, requiri
 
 ### Getting Started
 
-1. **Launch the Game**: Open the Reddit post containing Popcorn Catch and click the "Launch App" button
-2. **Wait for Loading**: The Preloader scene displays a progress bar (464px wide, white bar on black outline) while assets load:
-   - kitchen_background.png (kitchen scene)
-   - large_pot.png (cooking pot)
-   - single_corn.png (popcorn kernels)
-   - empty_popcorn_cup.png (player character)
-   - counter1.png (kitchen counter)
+1. **Launch the Game**: Open the Reddit post containing Corn Clash and click the "🍿 Play Now" button on the splash screen
+   - Splash screen shows "Corn Clash" branding with custom background and icon
+   - Description: "Catch flying popcorn!"
+2. **Wait for Loading**: The Preloader scene displays a modern loading screen while assets load:
+   - Pure black background (#000000) for clean, professional look
+   - Centered app icon (myiconimage.png) scaled proportionally to 128x128 pixels at position (400, 250)
+   - Glowing duplicate icon layer behind main icon (1.1x scale, 0.4 alpha, depth -1) with smooth pulsing animation
+   - Pulsing animation: scale 1.0→1.05→1.0 and alpha 0.4→0.32→0.4 over 2-second cycle with Sine.easeInOut easing
+   - Cyan-to-blue gradient progress bar (400x20px with rounded corners) positioned at (400, 380) with animated fill showing load progress
+   - Progress bar background: dark gray (#333333) with lighter gray stroke (#666666), drawn with rounded corners
+   - Progress bar fill: cyan-to-blue gradient (#00FFFF → #0080FF) that grows from left to right (4px to 396px width)
+   - Multi-layer glow effect: Two glow layers behind the fill bar (alpha 0.6 with +4px padding, alpha 0.3 with +8px padding) for neon effect
+   - Assets loaded: kitchen_background.png, large_pot.png, single_corn.png, empty_popcorn_cup.png, counter1.png
    - If any asset fails to load, a warning appears in console but game continues
 3. **Main Menu**: Click or tap anywhere on the screen to continue past the splash screen
    - Displays "POPCORN CATCH!" title in gold (#FFD700)
-   - Shows control instructions for both players
+   - Shows control instructions: "Player 1: A/D to move" and "Player 2: Arrow Keys to move"
+   - Game objective: "Catch the popcorn! 60 seconds - Most popcorn wins!"
    - Blinking "Click to Start!" text (green #00FF00) indicates interactivity
 4. **Mode Selection**: Choose your preferred game mode:
    - **SOLO MODE** (Red #FF6B6B button): "Play alone and beat your high score!"
@@ -202,7 +226,10 @@ The game runs entirely within Reddit posts using Devvit's web framework, requiri
 - Position your cup to intercept falling kernels
 - Cup size: 100x100 pixels (consistent across both modes)
 - Collision detection uses overlap physics (80% of cup width, 60% of cup height via `setSize()`)
-- Each successful catch awards **+1 point**
+- **Three types of popcorn with different point values:**
+  - **Normal (white)**: +1 point (70% spawn rate)
+  - **Red**: +10 points (20% spawn rate) - shows "+10" popup on catch
+  - **Blue**: +20 points (10% spawn rate) - shows "+20" popup on catch
 - Maximum 50 active popcorn kernels on screen at once (configured in `popcornGroup` maxSize)
 - Cup stays at fixed Y position (120px from bottom) - only moves horizontally
 - Cup movement speed: 300 pixels/second (via `setVelocityX()`)
@@ -211,7 +238,11 @@ The game runs entirely within Reddit posts using Devvit's web framework, requiri
 
 **Visual Feedback**:
 - **Particle Burst**: 8 popcorn particles explode from the catch point (speed: 50-150 px/s, lifespan: 400ms, scale: 0.15→0, gravity: 200 px/s²)
-- **Flash Effect**: Yellow (#FFFF00) circle expands and fades at catch location (20px → 40px over 200ms, alpha: 0.6→0)
+- **Flash Effect**: Color-coded circle expands and fades at catch location (20px → 40px over 200ms, alpha: 0.6→0)
+  - Yellow (#FFFF00) for normal popcorn
+  - Red (#FF0000) for red popcorn
+  - Blue (#0088FF) for blue popcorn
+- **Score Popups**: Floating text shows "+10" (red) or "+20" (blue) for special popcorn catches, rising and fading over 800ms
 - **Screen Shake**: Subtle 2-pixel shake when popcorn launches (50ms duration, 0.002 intensity via `cameras.main.shake()`)
 - **Idle Animation**: Your cup gently floats up and down (±2px, 800ms sine wave cycle via `tweens.add()`)
 - **Pot Animation**: Multi-axis wobble with Sine.easeInOut:
@@ -301,10 +332,11 @@ The game runs entirely within Reddit posts using Devvit's web framework, requiri
 - Cup tints applied via `setTint()` method (0xff6b6b for P1, 0x4ecdc4 for P2)
 
 **Catch Effects**:
-- Particle bursts (8 particles, speed: 50-150 px/s, lifespan: 400ms) and flash effects (yellow circle, 20px→40px) when catching popcorn
+- Particle bursts (8 particles, speed: 50-150 px/s, lifespan: 400ms) and color-coded flash effects (20px→40px) when catching popcorn
+- Score popups for special popcorn: "+10" (red) or "+20" (blue) float upward and fade
 - Screen shake on popcorn launch (2px, 50ms, 0.002 intensity)
 - Visual feedback appears for the player who catches (prevents double-counting)
-- Catch animation scales cup to 110% briefly (100ms, yoyo, Back.easeOut)
+- Flash color matches popcorn type: yellow for normal, red for +10, blue for +20
 
 **Game Over**: After 60 seconds, see:
 - Winner announcement (or "It's a Tie!" if scores are equal)
@@ -322,31 +354,40 @@ The game runs entirely within Reddit posts using Devvit's web framework, requiri
 #### Solo Mode Strategy
 - **Center Positioning**: Start near the middle (x=400) to react to launches in either direction
 - **Predict Trajectories**: Watch the pot's wobble and anticipate where kernels will land based on launch angle
+- **Prioritize Special Popcorn**: Red (+10) and blue (+20) popcorn are worth significantly more - adjust position to catch them
+- **Color Recognition**: Train your eyes to spot red and blue popcorn quickly among the white kernels
 - **Smooth Movement**: Avoid oversteering - small adjustments (A/D taps) are more effective than holding keys
 - **Learn the Physics**: Kernels follow consistent gravity (300 px/s²) - practice reading their arcs
 - **Stay Calm**: Frantic movement causes you to miss easy catches - focus on positioning
 - **Movement Range**: You have full screen access (x: 50-750), use it to your advantage
+- **Risk vs Reward**: Sometimes it's worth missing a normal kernel to position for a special one
 
 #### Multiplayer Strategy
 - **Territory Mastery**: Learn the exact boundaries of your half (P1: x=50-350, P2: x=450-750, center line at x=400)
 - **Positioning**: Stay slightly toward the center line (x=350 for P1, x=450 for P2) to catch kernels coming from the pot
+- **Special Popcorn Priority**: Red (+10) and blue (+20) popcorn can swing the game - prioritize them over normal kernels
 - **Opponent Awareness**: Watch your opponent's position (updates every 500ms with smooth interpolation) to predict which kernels they'll catch
 - **Boundary Play**: Kernels near the center line are contested - time your movements carefully
+- **Score Tracking**: Monitor both scores (top corners) - if behind, take more risks for special popcorn
 - **Consistency Over Speed**: Steady catches beat risky dashes that leave you out of position
 - **Pot Collision**: Don't get stuck on the pot (positioned at x=400) - maintain distance to stay mobile
 - **Network Awareness**: Position updates are throttled (every 10 frames), so smooth movements work better than erratic dashing
+- **Comeback Potential**: A single blue popcorn (+20) can close a large score gap quickly
 
 #### Advanced Techniques
 - **Arc Reading**: High-velocity kernels (250 px/s horizontal) travel farther - position accordingly based on launch angle
+- **Color Spotting**: Train your peripheral vision to detect red/blue tints while tracking multiple kernels
+- **Value Calculation**: Quick mental math - catching 2 blue popcorn (+40) equals 40 normal kernels
 - **Bounce Prediction**: Kernels have 0.3 bounce coefficient - anticipate second chances off the counter (positioned 50px from bottom)
 - **Spawn Timing**: Screen shake (2px, 50ms) indicates new kernel launch - prepare to track it immediately
 - **Edge Control**: Use the screen boundaries (x=50, x=750) to your advantage - kernels can't escape sideways
-- **Spawn Rate**: Kernels spawn every 0.8-1.2 seconds - expect 50-75 kernels per 60-second game
+- **Spawn Rate**: Kernels spawn every 0.4-0.7 seconds - expect 85-150 kernels per 60-second game
 - **Physics Prediction**: Gravity is constant at 300 px/s² - learn to predict landing zones based on launch velocity
 - **Pot Position Awareness**: Pot is at center (x=400, y=480) - kernels launch from this point with random trajectories
 - **Mobile Optimization**: Touch controls work best with quick taps rather than holding for precise positioning
 - **Velocity Calculation**: Horizontal (100-250 px/s) + Vertical (-300 to -450 px/s) + Gravity (300 px/s²) = predictable arcs
 - **Collision Timing**: Kernels deactivate immediately on catch (`setActive(false)`) - no need to worry about double-catches
+- **Special Popcorn Odds**: Expect ~21 red and ~11 blue popcorn per game (20% and 10% of ~105 average spawns)
 
 ---
 
@@ -365,17 +406,21 @@ The game runs entirely within Reddit posts using Devvit's web framework, requiri
   - Rotation: ±2°, 120ms cycle, yoyo repeat -1
 - **Player Idle**: Gentle 2-pixel vertical bounce (800ms sine wave, continuous, yoyo repeat -1)
   - In multiplayer: Player 2 has 400ms delay offset for visual variety
-- **Catch Animation**: Cup scales to 110% (100ms, yoyo, Back.easeOut) - not currently implemented but referenced in GAME_MECHANICS.md
 - **Particle System**: 8-particle burst on catch (`catchParticles.explode(8, x, y)`)
   - Speed: 50-150 px/s
   - Scale: 0.15 → 0 (fade out)
   - Lifespan: 400ms
   - Gravity: 200 px/s²
-- **Flash Effect**: Expanding yellow circle (`add.circle()` with tween)
-  - Color: #FFFF00 (yellow)
+- **Flash Effect**: Color-coded expanding circle (`add.circle()` with tween)
+  - Colors: Yellow (#FFFF00) for normal, Red (#FF0000) for +10, Blue (#0088FF) for +20
   - Alpha: 0.6 → 0 (fade out)
   - Scale: 1 → 2 (20px → 40px radius)
   - Duration: 200ms
+- **Score Popups**: Floating "+10" or "+20" text for special popcorn
+  - Rise: y position moves up 50px
+  - Fade: Alpha 1.0 → 0
+  - Duration: 800ms
+  - Colors: Red (#FF0000) for +10, Blue (#0088FF) for +20
 - **Screen Shake**: 2-pixel camera shake on each popcorn launch (50ms, 0.002 intensity via `cameras.main.shake()`)
 - **Button Hover**: 1.05x scale on mode selection buttons, 1.1x on game over buttons
 - **Text Blinking**: "Click to Start!" and "Play Again" buttons use alpha animation (0.3-1.0 or 0.5-1.0, 800ms, yoyo repeat -1)
@@ -392,9 +437,12 @@ The game runs entirely within Reddit posts using Devvit's web framework, requiri
 - Solo player: Default cup color (no tint), 100x100px
 - Player 1: Red tint (#FF6B6B), 100x100px
 - Player 2: Cyan tint (#4ECDC4), 100x100px
+- Normal popcorn: White (no tint), +1 point
+- Red popcorn: Red tint (#FF0000), +10 points
+- Blue popcorn: Blue tint (#0088FF), +20 points
 - Score text: Gold (#FFD700) in solo, team colors (#FF6B6B, #4ECDC4) in multiplayer
 - Timer: White (#FFFFFF) with black stroke (#000000, 6px thickness)
-- Flash effect: Yellow (#FFFF00)
+- Flash effects: Yellow (#FFFF00) for normal, Red (#FF0000) for +10, Blue (#0088FF) for +20
 - Background: Cream (#FFF8DC)
 - Touch buttons: Black (#000000) with 30% alpha, white stroke (#FFFFFF, 4px)
 

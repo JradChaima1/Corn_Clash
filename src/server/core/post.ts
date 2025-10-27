@@ -10,11 +10,11 @@ export const createPost = async () => {
     splash: {
       // Splash screen customization
       appDisplayName: 'Corn Clash',
-      backgroundUri: 'mysplash.png',
+      backgroundUri: 'mybgimage.png',
       buttonLabel: '🍿 Play Now',
-      description: 'Catch flying popcorn in this fast-paced arcade game!',
+      description: 'Catch flying popcorn!',
       heading: 'Corn Clash',
-      appIconUri: 'mysplash.png',
+      appIconUri: 'myiconimage.png',
     },
     postData: {
       gameState: 'initial',

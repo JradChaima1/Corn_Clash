@@ -1,5 +1,6 @@
 import { Scene } from 'phaser';
 import * as Phaser from 'phaser';
+import { ButtonFactory } from '../utils/ButtonFactory';
 
 interface SoloGameOverData {
   score: number;
@@ -107,6 +108,26 @@ export class SoloGameOver extends Scene {
       duration: 800,
       yoyo: true,
       repeat: -1,
+    });
+
+    // Main Menu button using ButtonFactory
+    const mainMenuButton = ButtonFactory.createButton(
+      this,
+      width / 2,
+      height * 0.88,
+      'Main Menu',
+      0x22c55e,
+      0x16a34a,
+      220
+    );
+    mainMenuButton.setInteractive(
+      new Phaser.Geom.Rectangle(-110, -30, 220, 60),
+      Phaser.Geom.Rectangle.Contains
+    );
+
+    ButtonFactory.addHoverEffect(this, mainMenuButton);
+    ButtonFactory.addClickEffect(this, mainMenuButton, () => {
+      this.scene.start('MainMenu');
     });
   }
 }

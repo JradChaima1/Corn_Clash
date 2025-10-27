@@ -1,10 +1,10 @@
 import { Scene, GameObjects } from 'phaser';
+import { ButtonFactory } from '../utils/ButtonFactory';
 
 export class ModeSelect extends Scene {
   private background!: GameObjects.Image;
-  private title!: GameObjects.Text;
-  private soloButton!: GameObjects.Text;
-  private multiplayerButton!: GameObjects.Text;
+  private soloButton!: GameObjects.Container;
+  private multiplayerButton!: GameObjects.Container;
 
   constructor() {
     super('ModeSelect');
@@ -18,31 +18,22 @@ export class ModeSelect extends Scene {
     this.background.setDisplaySize(width, height);
     this.background.setAlpha(0.7);
 
-    // Title
-    this.title = this.add
-      .text(width / 2, height * 0.2, 'POPCORN CATCH!', {
-        fontFamily: 'Arial Black',
-        fontSize: '56px',
-        color: '#FFD700',
-        stroke: '#000000',
-        strokeThickness: 10,
-        align: 'center',
-      })
-      .setOrigin(0.5);
+
 
     // Solo Mode Button
-    this.soloButton = this.add
-      .text(width / 2, height * 0.45, 'SOLO MODE', {
-        fontFamily: 'Arial Black',
-        fontSize: '36px',
-        color: '#FFFFFF',
-        backgroundColor: '#FF6B6B',
-        stroke: '#000000',
-        strokeThickness: 6,
-        padding: { x: 40, y: 20 },
-      })
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true });
+    this.soloButton = ButtonFactory.createButton(
+      this,
+      width / 2,
+      height * 0.45,
+      'SOLO MODE',
+      0xff6b6b,
+      0xcc5555,
+      260
+    );
+    this.soloButton.setInteractive(
+      new Phaser.Geom.Rectangle(-130, -35, 260, 70),
+      Phaser.Geom.Rectangle.Contains
+    );
 
     // Solo description
     this.add
@@ -57,18 +48,19 @@ export class ModeSelect extends Scene {
       .setOrigin(0.5);
 
     // Multiplayer Mode Button
-    this.multiplayerButton = this.add
-      .text(width / 2, height * 0.65, 'MULTIPLAYER', {
-        fontFamily: 'Arial Black',
-        fontSize: '36px',
-        color: '#FFFFFF',
-        backgroundColor: '#4ECDC4',
-        stroke: '#000000',
-        strokeThickness: 6,
-        padding: { x: 40, y: 20 },
-      })
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true });
+    this.multiplayerButton = ButtonFactory.createButton(
+      this,
+      width / 2,
+      height * 0.65,
+      'MULTIPLAYER',
+      0x4ecdc4,
+      0x3da39d,
+      280
+    );
+    this.multiplayerButton.setInteractive(
+      new Phaser.Geom.Rectangle(-140, -35, 280, 70),
+      Phaser.Geom.Rectangle.Contains
+    );
 
     // Multiplayer description
     this.add
@@ -82,27 +74,40 @@ export class ModeSelect extends Scene {
       })
       .setOrigin(0.5);
 
-    // Button hover effects
-    this.soloButton
-      .on('pointerover', () => {
-        this.soloButton.setScale(1.05);
-      })
-      .on('pointerout', () => {
-        this.soloButton.setScale(1);
-      })
-      .on('pointerdown', () => {
-        this.scene.start('SoloGame');
-      });
+    // Add button effects
+    ButtonFactory.addHoverEffect(this, this.soloButton);
+    ButtonFactory.addHoverEffect(this, this.multiplayerButton);
 
-    this.multiplayerButton
-      .on('pointerover', () => {
-        this.multiplayerButton.setScale(1.05);
-      })
-      .on('pointerout', () => {
-        this.multiplayerButton.setScale(1);
-      })
-      .on('pointerdown', () => {
-        this.scene.start('MultiplayerLobby');
-      });
+    ButtonFactory.addClickEffect(this, this.soloButton, () => {
+      this.scene.start('SoloGame');
+    });
+
+    ButtonFactory.addClickEffect(this, this.multiplayerButton, () => {
+      this.scene.start('MultiplayerLobby');
+    });
+
+    // Floating animations
+    ButtonFactory.addFloatingEffect(this, this.soloButton, height * 0.45, 1000);
+    ButtonFactory.addFloatingEffect(this, this.multiplayerButton, height * 0.65, 1200);
+
+    // Main Menu button (back to main menu)
+    const mainMenuButton = ButtonFactory.createButton(
+      this,
+      width / 2,
+      height * 0.9,
+      'Main Menu',
+      0x22c55e,
+      0x16a34a,
+      220
+    );
+    mainMenuButton.setInteractive(
+      new Phaser.Geom.Rectangle(-110, -30, 220, 60),
+      Phaser.Geom.Rectangle.Contains
+    );
+
+    ButtonFactory.addHoverEffect(this, mainMenuButton);
+    ButtonFactory.addClickEffect(this, mainMenuButton, () => {
+      this.scene.start('MainMenu');
+    });
   }
 }

@@ -1,4 +1,5 @@
 import { Scene, GameObjects } from 'phaser';
+import { ButtonFactory } from '../utils/ButtonFactory';
 
 interface GameOverData {
   winner: string;
@@ -131,5 +132,25 @@ export class MultiplayerGameOver extends Scene {
       .on('pointerdown', () => {
         this.scene.start('ModeSelect');
       });
+
+    // Main Menu button using ButtonFactory
+    const mainMenuButton = ButtonFactory.createButton(
+      this,
+      width / 2,
+      height * 0.93,
+      'Main Menu',
+      0x22c55e,
+      0x16a34a,
+      220
+    );
+    mainMenuButton.setInteractive(
+      new Phaser.Geom.Rectangle(-110, -30, 220, 60),
+      Phaser.Geom.Rectangle.Contains
+    );
+
+    ButtonFactory.addHoverEffect(this, mainMenuButton);
+    ButtonFactory.addClickEffect(this, mainMenuButton, () => {
+      this.scene.start('MainMenu');
+    });
   }
 }

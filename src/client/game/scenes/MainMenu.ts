@@ -1,10 +1,12 @@
 import { Scene, GameObjects } from 'phaser';
+import { ButtonFactory } from '../utils/ButtonFactory';
 
 export class MainMenu extends Scene {
   background: GameObjects.Image | null = null;
   title: GameObjects.Text | null = null;
   instructions: GameObjects.Text | null = null;
-  startText: GameObjects.Text | null = null;
+  playButton: GameObjects.Container | null = null;
+  howToPlayButton: GameObjects.Container | null = null;
 
   constructor() {
     super('MainMenu');
@@ -14,19 +16,20 @@ export class MainMenu extends Scene {
     this.background = null;
     this.title = null;
     this.instructions = null;
-    this.startText = null;
+    this.playButton = null;
+    this.howToPlayButton = null;
   }
 
   create() {
     const { width, height } = this.scale;
 
     // Background
-    this.background = this.add.image(width / 2, height / 2, 'kitchen');
+    this.background = this.add.image(width / 2, height / 2, 'mainmenubg');
     this.background.setDisplaySize(width, height);
 
     // Title
     this.title = this.add
-      .text(width / 2, height * 0.25, 'POPCORN CATCH!', {
+      .text(width / 2, height * 0.25, '', {
         fontFamily: 'Arial Black',
         fontSize: '56px',
         color: '#FFD700',
@@ -36,46 +39,53 @@ export class MainMenu extends Scene {
       })
       .setOrigin(0.5);
 
-    // Instructions
-    this.instructions = this.add
-      .text(
-        width / 2,
-        height * 0.5,
-        'Player 1: A/D to move\nPlayer 2: Arrow Keys to move\n\nCatch the popcorn!\n60 seconds - Most popcorn wins!',
-        {
-          fontFamily: 'Arial',
-          fontSize: '24px',
-          color: '#FFFFFF',
-          stroke: '#000000',
-          strokeThickness: 6,
-          align: 'center',
-        }
-      )
-      .setOrigin(0.5);
 
-    // Start text
-    this.startText = this.add
-      .text(width / 2, height * 0.8, 'Click to Start!', {
-        fontFamily: 'Arial Black',
-        fontSize: '32px',
-        color: '#00FF00',
-        stroke: '#000000',
-        strokeThickness: 8,
-        align: 'center',
-      })
-      .setOrigin(0.5);
 
-    // Blinking animation
-    this.tweens.add({
-      targets: this.startText,
-      alpha: 0.3,
-      duration: 800,
-      yoyo: true,
-      repeat: -1,
-    });
+    // Create Play button
+    this.playButton = ButtonFactory.createButton(
+      this,
+      width / 2,
+      height * 0.65,
+      'Play',
+      0x2563eb,
+      0x1e40af,
+      200
+    );
+    this.playButton.setInteractive(
+      new Phaser.Geom.Rectangle(-100, -30, 200, 60),
+      Phaser.Geom.Rectangle.Contains
+    );
 
-    this.input.once('pointerdown', () => {
+    // Create How to Play button
+    this.howToPlayButton = ButtonFactory.createButton(
+      this,
+      width / 2,
+      height * 0.8,
+      'How to Play',
+      0xdc2626,
+      0x991b1b,
+      240
+    );
+    this.howToPlayButton.setInteractive(
+      new Phaser.Geom.Rectangle(-120, -30, 240, 60),
+      Phaser.Geom.Rectangle.Contains
+    );
+
+    // Add button effects
+    ButtonFactory.addHoverEffect(this, this.playButton);
+    ButtonFactory.addHoverEffect(this, this.howToPlayButton);
+
+    ButtonFactory.addClickEffect(this, this.playButton, () => {
       this.scene.start('ModeSelect');
     });
+
+    ButtonFactory.addClickEffect(this, this.howToPlayButton, () => {
+      // TODO: Add how to play scene or modal
+      console.log('How to Play clicked');
+    });
+
+    // Floating animations
+    ButtonFactory.addFloatingEffect(this, this.playButton, height * 0.65, 1000);
+    ButtonFactory.addFloatingEffect(this, this.howToPlayButton, height * 0.8, 1200);
   }
 }
