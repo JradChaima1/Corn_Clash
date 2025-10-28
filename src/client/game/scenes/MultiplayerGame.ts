@@ -539,7 +539,7 @@ export class MultiplayerGame extends Scene {
           // Random launch velocity with wider spread
           const horizontalSpeed = Phaser.Math.Between(150, 300);
           const horizontalDirection = Phaser.Math.Between(0, 1) === 0 ? -1 : 1;
-          const verticalSpeed = Phaser.Math.Between(-450, -300);
+          const verticalSpeed = Phaser.Math.Between(-350, -250);
 
           popcorn.setVelocity(horizontalSpeed * horizontalDirection, verticalSpeed);
           popcorn.setAngularVelocity(Phaser.Math.Between(-200, 200));
@@ -683,6 +683,12 @@ export class MultiplayerGame extends Scene {
       this.popcornSpawnTimer.remove();
     }
 
+    // Stop all popcorn immediately
+    this.popcornGroup.clear(true, true);
+
+    // Stop pot animation
+    this.tweens.killTweensOf(this.pot);
+
     // Show loading UI
     const loadingBg = this.add.rectangle(
       this.scale.width / 2,
@@ -718,59 +724,8 @@ export class MultiplayerGame extends Scene {
       loop: true,
     });
 
-    // CRITICAL: Send final score update FIRST before fetching
-    console.log('[MultiplayerGame] Sending final score update...');
-    try {
-      await fetch(`/api/multiplayer/score?gameId=${this.gameId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ score: this.playerRole === 'player1' ? this.player1Score : this.player2Score }),
-      });
-      console.log(`[MultiplayerGame] Final score sent: ${this.playerRole === 'player1' ? this.player1Score : this.player2Score}`);
-    } catch (error) {
-      console.error('[MultiplayerGame] Error sending final score:', error);
-    }
-
-    // Wait 1.5 seconds to ensure BOTH players' final scores reach the server
-    console.log('[MultiplayerGame] Waiting for all scores to sync...');
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    // Fetch final scores from server - this is the authoritative source
-    let finalP1Score = 0;
-    let finalP2Score = 0;
-
-    try {
-      console.log('[MultiplayerGame] Fetching authoritative final scores from server...');
-      const response = await fetch(`/api/multiplayer/state?gameId=${this.gameId}`);
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.gameState) {
-          // Use server scores as the ONLY source of truth
-          finalP1Score = data.gameState.player1Score;
-          finalP2Score = data.gameState.player2Score;
-          console.log(
-            `[MultiplayerGame] Server authoritative scores: P1=${finalP1Score}, P2=${finalP2Score}`
-          );
-        } else {
-          console.warn('[MultiplayerGame] Game state not found, using local scores');
-          finalP1Score = this.player1Score;
-          finalP2Score = this.player2Score;
-        }
-      } else {
-        console.warn('[MultiplayerGame] Failed to fetch game state, using local scores');
-        finalP1Score = this.player1Score;
-        finalP2Score = this.player2Score;
-      }
-    } catch (error) {
-      console.error('Error fetching final scores:', error);
-      // Fallback to local scores if server fetch fails
-      finalP1Score = this.player1Score;
-      finalP2Score = this.player2Score;
-    }
-
-    this.player1Score = finalP1Score;
-    this.player2Score = finalP2Score;
-    console.log(`[MultiplayerGame] Final scores: P1=${this.player1Score}, P2=${this.player2Score}`);
+    // Use current local scores (already synced during gameplay)
+    console.log(`[MultiplayerGame] Using current scores: P1=${this.player1Score}, P2=${this.player2Score}`);
 
     const winner =
       this.player1Score > this.player2Score
@@ -894,14 +849,19 @@ export class MultiplayerGame extends Scene {
           ease: 'Linear',
         });
 
-        // Update scores from server (only if server score is higher to prevent decrements)
-        if (data.gameState.player1Score > this.player1Score) {
-          this.player1Score = data.gameState.player1Score;
-          this.player1ScoreText.setText(`P1: ${this.player1Score}`);
-        }
-        if (data.gameState.player2Score > this.player2Score) {
-          this.player2Score = data.gameState.player2Score;
-          this.player2ScoreText.setText(`P2: ${this.player2Score}`);
+        // Update opponent's score from server (always trust server for opponent)
+        if (this.playerRole === 'player1') {
+          // I'm player 1, update player 2's score from server
+          if (data.gameState.player2Score !== this.player2Score) {
+            this.player2Score = data.gameState.player2Score;
+            this.player2ScoreText.setText(`P2: ${this.player2Score}`);
+          }
+        } else {
+          // I'm player 2, update player 1's score from server
+          if (data.gameState.player1Score !== this.player1Score) {
+            this.player1Score = data.gameState.player1Score;
+            this.player1ScoreText.setText(`P1: ${this.player1Score}`);
+          }
         }
       }
     } catch (error) {

@@ -332,7 +332,7 @@ export class SoloGame extends Scene {
           // Random launch velocity with wider spread
           const horizontalSpeed = Phaser.Math.Between(150, 300);
           const horizontalDirection = Phaser.Math.Between(0, 1) === 0 ? -1 : 1;
-          const verticalSpeed = Phaser.Math.Between(-450, -300);
+          const verticalSpeed = Phaser.Math.Between(-350, -250);
 
           popcorn.setVelocity(horizontalSpeed * horizontalDirection, verticalSpeed);
           popcorn.setAngularVelocity(Phaser.Math.Between(-200, 200));
@@ -442,6 +442,12 @@ export class SoloGame extends Scene {
     if (this.popcornSpawnTimer) {
       this.popcornSpawnTimer.remove();
     }
+
+    // Stop all popcorn immediately
+    this.popcornGroup.clear(true, true);
+
+    // Stop pot animation
+    this.tweens.killTweensOf(this.pot);
 
     this.scene.start('SoloGameOver', {
       score: this.score,
