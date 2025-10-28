@@ -1,5 +1,6 @@
 import { Scene } from 'phaser';
 import * as Phaser from 'phaser';
+import { AudioManager } from '../utils/AudioManager';
 import { ButtonFactory } from '../utils/ButtonFactory';
 
 interface SoloGameOverData {
@@ -16,6 +17,10 @@ export class SoloGameOver extends Scene {
 
   create(data: SoloGameOverData) {
     const { width, height } = this.scale;
+
+    // Switch back to menu music
+    AudioManager.getInstance().init(this);
+    AudioManager.getInstance().playMusic('menu_music', 0.3);
 
     // Background
     this.background = this.add.image(width / 2, height / 2, 'kitchen');

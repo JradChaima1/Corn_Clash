@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Assets Index Updater",
+  "description": "Automatically updates the assets/index.ts file when new files are created in the assets folder to maintain proper asset exports",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "assets/*"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A new file has been created in the assets folder. Please review the assets folder contents and update the assets/index.ts file to ensure all asset files are properly exported. Make sure to:\n1. Check if assets/index.ts exists, if not create it\n2. Add appropriate exports for the new asset file(s)\n3. Maintain consistent naming conventions\n4. Ensure TypeScript compatibility\n5. Keep the file organized and well-structured"
+  }
+}

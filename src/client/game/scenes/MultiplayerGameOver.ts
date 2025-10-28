@@ -1,4 +1,5 @@
 import { Scene, GameObjects } from 'phaser';
+import { AudioManager } from '../utils/AudioManager';
 import { ButtonFactory } from '../utils/ButtonFactory';
 
 interface GameOverData {
@@ -19,6 +20,10 @@ export class MultiplayerGameOver extends Scene {
 
   init(data: GameOverData) {
     this.gameId = data.gameId || null;
+
+    // Switch back to menu music
+    AudioManager.getInstance().init(this);
+    AudioManager.getInstance().playMusic('menu_music', 0.3);
 
     // Clean up game after 5 seconds to ensure both players see scores
     if (this.gameId) {

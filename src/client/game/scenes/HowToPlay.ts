@@ -1,4 +1,5 @@
 import { Scene } from 'phaser';
+import { AudioManager } from '../utils/AudioManager';
 import { ButtonFactory } from '../utils/ButtonFactory';
 
 export class HowToPlay extends Scene {
@@ -8,6 +9,10 @@ export class HowToPlay extends Scene {
 
   create() {
     const { width, height } = this.scale;
+
+    // Ensure menu music is playing
+    AudioManager.getInstance().init(this);
+    AudioManager.getInstance().playMusic('menu_music', 0.3);
 
     // Background
     const background = this.add.image(width / 2, height / 2, 'kitchen');
@@ -156,7 +161,7 @@ export class HowToPlay extends Scene {
       this,
       width / 2,
       height - 40,
-      'Back to Main Menu',
+      'Main Menu',
       0x22c55e,
       0x16a34a,
       280

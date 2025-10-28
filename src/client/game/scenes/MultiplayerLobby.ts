@@ -1,5 +1,6 @@
 import { Scene } from 'phaser';
 import * as Phaser from 'phaser';
+import { AudioManager } from '../utils/AudioManager';
 import { JoinGameResponse } from '../../../shared/types/api';
 import { ButtonFactory } from '../utils/ButtonFactory';
 
@@ -36,6 +37,10 @@ export class MultiplayerLobby extends Scene {
 
   create() {
     const { width, height } = this.scale;
+
+    // Ensure menu music is playing
+    AudioManager.getInstance().init(this);
+    AudioManager.getInstance().playMusic('menu_music', 0.3);
 
     // Background
     this.background = this.add.image(width / 2, height / 2, 'kitchen');

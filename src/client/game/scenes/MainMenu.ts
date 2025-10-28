@@ -1,5 +1,6 @@
 import { Scene, GameObjects } from 'phaser';
 import { ButtonFactory } from '../utils/ButtonFactory';
+import { AudioManager } from '../utils/AudioManager';
 
 export class MainMenu extends Scene {
   background: GameObjects.Image | null = null;
@@ -23,9 +24,20 @@ export class MainMenu extends Scene {
   create() {
     const { width, height } = this.scale;
 
+    // Initialize AudioManager and start menu music
+    AudioManager.getInstance().init(this);
+    AudioManager.getInstance().playMusic('menu_music', 0.3);
+
     // Background
     this.background = this.add.image(width / 2, height / 2, 'mainmenubg');
     this.background.setDisplaySize(width, height);
+
+    // Create menu buttons
+    this.createMenuButtons();
+  }
+
+  private createMenuButtons(): void {
+    const { width, height } = this.scale;
 
     // Title
     this.title = this.add
@@ -38,8 +50,6 @@ export class MainMenu extends Scene {
         align: 'center',
       })
       .setOrigin(0.5);
-
-
 
     // Create Play button
     this.playButton = ButtonFactory.createButton(

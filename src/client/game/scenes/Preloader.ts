@@ -169,11 +169,15 @@ export class Preloader extends Scene {
 
     // Load game images with correct filenames
     this.load.image('kitchen', 'kitchen_background.png');
-    this.load.image('mainmenubg','mybgimage.png')
+    this.load.image('mainmenubg', 'mybgimage.png')
     this.load.image('pot', 'large_pot.png');
     this.load.image('popcorn', 'single_corn.png');
     this.load.image('cup', 'empty_popcorn_cup.png');
     this.load.image('counter', 'counter1.png');
+
+    // Load audio files
+    this.load.audio('menu_music', 'mainmenusong.mp3');
+    this.load.audio('game_music', 'gameplaysong.mp3');
 
     // Handle loading errors gracefully
     this.load.on('loaderror', (file: any) => {

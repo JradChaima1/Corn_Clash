@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Update Preloader Hook",
+  "description": "Automatically updates the Preloader.ts file whenever a file (image or audio) is added to the src/client/public/assets folder. The hook scans the folder and regenerates the preload logic so all assets are properly loaded in the game without needing manual updates.",
+  "version": "1",
+  "when": {
+    "type": "fileCreated",
+    "patterns": [
+      "src/client/public/assets/**/*"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A file has been added in the src/client/public/assets folder. Please scan the entire assets directory and update the Preloader.ts file located at src/client/game/scenes/Preloader.ts to include preload statements for all current assets. \n\nFor image files (.png, .jpg, .jpeg, .gif, .svg), add: this.load.image('filename', 'assets/filename.ext');\nFor audio files (.mp3, .wav, .ogg), add: this.load.audio('filename', 'assets/filename.ext');\n\n"
+  }
+}

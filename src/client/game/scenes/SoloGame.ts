@@ -1,5 +1,6 @@
 import { Scene } from 'phaser';
 import * as Phaser from 'phaser';
+import { AudioManager } from '../utils/AudioManager';
 import { ButtonFactory } from '../utils/ButtonFactory';
 
 export class SoloGame extends Scene {
@@ -41,6 +42,10 @@ export class SoloGame extends Scene {
 
   create() {
     const { width, height } = this.scale;
+
+    // Switch to game music
+    AudioManager.getInstance().init(this);
+    AudioManager.getInstance().playMusic('game_music', 0.3);
 
     // Background
     this.background = this.add.image(width / 2, height / 2, 'kitchen');

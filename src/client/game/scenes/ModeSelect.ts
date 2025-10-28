@@ -1,5 +1,6 @@
 import { Scene, GameObjects } from 'phaser';
 import { ButtonFactory } from '../utils/ButtonFactory';
+import { AudioManager } from '../utils/AudioManager';
 
 export class ModeSelect extends Scene {
   private background!: GameObjects.Image;
@@ -12,6 +13,10 @@ export class ModeSelect extends Scene {
 
   create() {
     const { width, height } = this.scale;
+
+    // Ensure menu music is playing
+    AudioManager.getInstance().init(this);
+    AudioManager.getInstance().playMusic('menu_music', 0.3);
 
     // Background
     this.background = this.add.image(width / 2, height / 2, 'kitchen');
