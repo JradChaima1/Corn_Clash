@@ -96,7 +96,7 @@ export class MultiplayerGameManager {
       // Try to join atomically with retry
       if (game.status === 'waiting' && game.player2Id === null) {
         console.log(`[Multiplayer] Attempting atomic join to game ${gameId}`);
-        
+
         const success = await this.executeWithRetry(async () => {
           const joined = await this.executeAtomicJoin(playerId, gameId);
           if (!joined) {
@@ -198,9 +198,9 @@ export class MultiplayerGameManager {
       game.status = 'playing';
       game.startTime = startTime;
       console.log(`[Multiplayer] Both players ready, transitioning game ${gameId} to playing with startTime ${startTime}`);
-      
+
       await redis.set(`${REDIS_GAME_PREFIX}${gameId}`, JSON.stringify(game));
-      
+
       return { success: true, bothReady: true, startTime };
     }
 
@@ -436,7 +436,7 @@ export class MultiplayerGameManager {
 
     for (const gameId of waitingGames) {
       const gameStr = await redis.get(`${REDIS_GAME_PREFIX}${gameId}`);
-      
+
       if (!gameStr) {
         // Game doesn't exist, remove from waiting list
         await redis.zRem(REDIS_WAITING_GAMES, [gameId]);
@@ -449,7 +449,7 @@ export class MultiplayerGameManager {
       // Check if game is expired
       if (this.isGameExpired(game.createdAt)) {
         console.log(`[Multiplayer] Cleaning up expired game ${gameId} (created ${new Date(game.createdAt).toISOString()})`);
-        
+
         // Delete player game keys
         if (game.player1Id) {
           await redis.del(`${REDIS_PLAYER_GAME_PREFIX}${game.player1Id}`);
@@ -460,10 +460,10 @@ export class MultiplayerGameManager {
 
         // Delete the game
         await redis.del(`${REDIS_GAME_PREFIX}${gameId}`);
-        
+
         // Remove from waiting queue
         await redis.zRem(REDIS_WAITING_GAMES, [gameId]);
-        
+
         cleanedCount++;
       }
     }
@@ -510,14 +510,14 @@ export class MultiplayerGameManager {
 
       // Execute atomic update
       await txn.multi();
-      
+
       // Update game state - keep in waiting status until both players are ready
       game.player2Id = playerId;
       game.player2Position = 650;
       game.player2Ready = null;
       game.lastActivity2 = Date.now();
       // Status remains 'waiting' until both players send ready signal
-      
+
       await txn.set(gameKey, JSON.stringify(game));
       await txn.set(playerGameKey, gameId, { expiration: new Date(Date.now() + GAME_TTL * 1000) });
       await txn.zRem(REDIS_WAITING_GAMES, [gameId]);

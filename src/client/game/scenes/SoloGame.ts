@@ -15,7 +15,11 @@ export class SoloGame extends Scene {
   // Game objects
   private background!: Phaser.GameObjects.Image;
   private counter!: Phaser.GameObjects.Image;
+
   private pot!: Phaser.GameObjects.Image;
+
+
+
   private player!: Phaser.GameObjects.Image;
   private popcornGroup!: Phaser.Physics.Arcade.Group;
 
@@ -46,22 +50,19 @@ export class SoloGame extends Scene {
     this.counter = this.add.image(width / 2, height - 50, 'counter');
     this.counter.setDisplaySize(width, 100);
 
-    // Cooking pot on top of counter
-    this.pot = this.add.image(width / 2, height - 150, 'pot');
-    this.pot.setScale(0.3);
-    
-    // Add physics to pot to block player movement
-    this.physics.add.existing(this.pot, true); // true = static body
-    (this.pot.body as Phaser.Physics.Arcade.StaticBody).setSize(
-      this.pot.width * 0.6,
-      this.pot.height * 0.4
-    );
+    this.pot = this.physics.add.image(width / 2, height - 120, 'pot'); this.pot.setDisplaySize(300, 300); const potBody = this.pot.body as Phaser.Physics.Arcade.Body; potBody.setImmovable(true);
+    // So it blocks other objects
+    potBody.setAllowGravity(false);
+    // So it doesn't fall
+    potBody.setSize(this.pot.width * 0.9, this.pot.height * 0.6);
+    potBody.setOffset(this.pot.width * 0.05, this.pot.height * 0.4);
 
-    // Pot shaking animation (continuous wobble)
+
+
     this.tweens.add({
       targets: this.pot,
-      x: width / 2 - 4,
-      duration: 80,
+      y: height - 125,
+      duration: 600,
       yoyo: true,
       repeat: -1,
       ease: 'Sine.easeInOut',
@@ -69,33 +70,27 @@ export class SoloGame extends Scene {
 
     this.tweens.add({
       targets: this.pot,
-      y: height - 148,
-      duration: 100,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut',
-    });
-
-    this.tweens.add({
-      targets: this.pot,
-      angle: -2,
-      duration: 120,
+      angle: -1,
+      duration: 700,
       yoyo: true,
       repeat: -1,
       ease: 'Sine.easeInOut',
     });
 
     // Player (popcorn cup) - smaller size
-    this.player = this.add.image(width / 2, height - 120, 'cup');
-    this.player.setDisplaySize(100, 100); // ~50px width
-    this.physics.add.existing(this.player);
-    (this.player.body as Phaser.Physics.Arcade.Body).setCollideWorldBounds(true);
-    (this.player.body as Phaser.Physics.Arcade.Body).setImmovable(true);
-    (this.player.body as Phaser.Physics.Arcade.Body).setAllowGravity(false); // Don't fall!
-    (this.player.body as Phaser.Physics.Arcade.Body).setSize(
-      this.player.width * 0.8,
-      this.player.height * 0.6
-    );
+    this.player = this.physics.add.image(width - 100, height - 120, 'cup');
+
+    this.player.setDisplaySize(100, 100);
+
+    const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
+    playerBody.setCollideWorldBounds(true);
+    playerBody.setImmovable(false);
+    playerBody.setAllowGravity(false);
+    playerBody.setSize(this.player.width * 0.8, this.player.height * 0.6);
+
+    // Add collision so the cup cannot pass through the pot
+    this.physics.add.collider(this.player, this.pot);
+
 
     // Idle animation for player (subtle bounce)
     this.tweens.add({
@@ -162,8 +157,7 @@ export class SoloGame extends Scene {
       this
     );
 
-    // Add collision between player and pot (blocks movement)
-    this.physics.add.collider(this.player, this.pot);
+
 
     // Main Menu button (top-right corner, smaller)
     const mainMenuButton = ButtonFactory.createButton(
@@ -241,57 +235,38 @@ export class SoloGame extends Scene {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   }
 
-  private spawnPopcorn(): void {
+  private spawnChaosPopcorn(): void {
     if (!this.isGameActive) return;
 
     const { width } = this.scale;
-    const potX = width / 2;
-    const potY = this.scale.height - 120; // Match pot position
+    // Spawn from random side (left or right edge)
+    const spawnFromLeft = Math.random() < 0.5;
+    const spawnX = spawnFromLeft ? 50 : width - 50;
+    const spawnY = 100; // Top of screen
 
-    const popcorn = this.popcornGroup.get(potX, potY, 'popcorn') as Phaser.Physics.Arcade.Sprite;
+    const popcorn = this.popcornGroup.get(spawnX, spawnY, 'popcorn') as Phaser.Physics.Arcade.Sprite;
 
     if (popcorn) {
       popcorn.setActive(true);
       popcorn.setVisible(true);
       popcorn.setDisplaySize(40, 40);
 
-      // Determine popcorn type: 70% normal (white), 20% red (+10), 10% blue (+20)
-      const rand = Math.random();
-      let popcornType: 'normal' | 'red' | 'blue';
-      let popcornValue: number;
+      // Chaos popcorn is always normal (white)
+      popcorn.clearTint();
+      popcorn.setData('value', 1);
+      popcorn.setData('type', 'normal');
 
-      if (rand < 0.7) {
-        popcornType = 'normal';
-        popcornValue = 1;
-        popcorn.clearTint();
-      } else if (rand < 0.9) {
-        popcornType = 'red';
-        popcornValue = 10;
-        popcorn.setTint(0xff0000); // Red tint
-      } else {
-        popcornType = 'blue';
-        popcornValue = 20;
-        popcorn.setTint(0x0088ff); // Blue tint
-      }
-
-      // Store the value in the popcorn's data
-      popcorn.setData('value', popcornValue);
-      popcorn.setData('type', popcornType);
-
-      // Random launch velocity
-      const horizontalSpeed = Phaser.Math.Between(100, 250);
-      const horizontalDirection = Phaser.Math.Between(0, 1) === 0 ? -1 : 1;
-      const verticalSpeed = Phaser.Math.Between(-450, -300);
+      // Launch toward center with high speed
+      const horizontalSpeed = Phaser.Math.Between(200, 350);
+      const horizontalDirection = spawnFromLeft ? 1 : -1;
+      const verticalSpeed = Phaser.Math.Between(100, 300);
 
       popcorn.setVelocity(horizontalSpeed * horizontalDirection, verticalSpeed);
-      popcorn.setAngularVelocity(Phaser.Math.Between(-200, 200));
+      popcorn.setAngularVelocity(Phaser.Math.Between(-300, 300));
       popcorn.setBounce(0.3);
       popcorn.setCollideWorldBounds(false);
 
-      // Subtle screen shake on launch
-      this.cameras.main.shake(50, 0.002);
-
-      // Destroy popcorn when off-screen
+      // Destroy when off-screen
       const checkOffScreen = this.time.addEvent({
         delay: 100,
         callback: () => {
@@ -311,8 +286,86 @@ export class SoloGame extends Scene {
     }
   }
 
+  private spawnPopcorn(): void {
+    if (!this.isGameActive) return;
+
+    const { width } = this.scale;
+    const potX = width / 2;
+    const potY = this.scale.height - 120; // Match pot position
+
+    // Spawn 2-3 popcorn pieces at once for more excitement
+    const spawnCount = Phaser.Math.Between(2, 3);
+
+    for (let i = 0; i < spawnCount; i++) {
+      // Slight delay between spawns for visual effect
+      this.time.delayedCall(i * 50, () => {
+        const popcorn = this.popcornGroup.get(potX, potY, 'popcorn') as Phaser.Physics.Arcade.Sprite;
+
+        if (popcorn) {
+          popcorn.setActive(true);
+          popcorn.setVisible(true);
+          popcorn.setDisplaySize(40, 40);
+
+          // Determine popcorn type: 70% normal (white), 20% red (-10 penalty), 10% blue (+20)
+          const rand = Math.random();
+          let popcornType: 'normal' | 'red' | 'blue';
+          let popcornValue: number;
+
+          if (rand < 0.7) {
+            popcornType = 'normal';
+            popcornValue = 1;
+            popcorn.clearTint();
+          } else if (rand < 0.9) {
+            popcornType = 'red';
+            popcornValue = -10; // PENALTY: Red popcorn now subtracts points
+            popcorn.setTint(0xff0000); // Red tint
+          } else {
+            popcornType = 'blue';
+            popcornValue = 20;
+            popcorn.setTint(0x0088ff); // Blue tint
+          }
+
+          // Store the value in the popcorn's data
+          popcorn.setData('value', popcornValue);
+          popcorn.setData('type', popcornType);
+
+          // Random launch velocity with wider spread
+          const horizontalSpeed = Phaser.Math.Between(150, 300);
+          const horizontalDirection = Phaser.Math.Between(0, 1) === 0 ? -1 : 1;
+          const verticalSpeed = Phaser.Math.Between(-450, -300);
+
+          popcorn.setVelocity(horizontalSpeed * horizontalDirection, verticalSpeed);
+          popcorn.setAngularVelocity(Phaser.Math.Between(-200, 200));
+          popcorn.setBounce(0.3);
+          popcorn.setCollideWorldBounds(false);
+
+          // Subtle screen shake on launch
+          this.cameras.main.shake(50, 0.002);
+
+          // Destroy popcorn when off-screen
+          const checkOffScreen = this.time.addEvent({
+            delay: 100,
+            callback: () => {
+              if (
+                popcorn.active &&
+                (popcorn.y > this.scale.height + 50 ||
+                  popcorn.x < -50 ||
+                  popcorn.x > this.scale.width + 50)
+              ) {
+                popcorn.setActive(false);
+                popcorn.setVisible(false);
+                checkOffScreen.remove();
+              }
+            },
+            loop: true,
+          });
+        }
+      });
+    }
+  }
+
   private catchPopcorn(
-    playerObj: Phaser.GameObjects.GameObject,
+    _playerObj: Phaser.GameObjects.GameObject,
     popcornObj: Phaser.GameObjects.GameObject
   ): void {
     const popcornSprite = popcornObj as Phaser.Physics.Arcade.Sprite;
@@ -332,12 +385,24 @@ export class SoloGame extends Scene {
 
     // Add score based on popcorn type
     this.score += popcornValue;
+    // Prevent negative scores
+    if (this.score < 0) this.score = 0;
     this.scoreText.setText(`Score: ${this.score}`);
+
+    // Red popcorn penalty: spawn extra popcorn chaos!
+    if (popcornType === 'red') {
+      // Spawn 5 extra popcorn pieces from both sides
+      for (let i = 0; i < 5; i++) {
+        this.time.delayedCall(i * 100, () => {
+          this.spawnChaosPopcorn();
+        });
+      }
+    }
 
     // Show score popup for special popcorn
     if (popcornType !== 'normal') {
       const scorePopup = this.add
-        .text(popcornSprite.x, popcornSprite.y, `+${popcornValue}`, {
+        .text(popcornSprite.x, popcornSprite.y, popcornValue > 0 ? `+${popcornValue}` : `${popcornValue}`, {
           fontFamily: 'Arial Black',
           fontSize: '32px',
           color: popcornType === 'red' ? '#ff0000' : '#0088ff',

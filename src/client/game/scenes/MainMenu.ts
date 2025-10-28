@@ -80,8 +80,7 @@ export class MainMenu extends Scene {
     });
 
     ButtonFactory.addClickEffect(this, this.howToPlayButton, () => {
-      // TODO: Add how to play scene or modal
-      console.log('How to Play clicked');
+      this.scene.start('HowToPlay');
     });
 
     // Floating animations

@@ -64,7 +64,7 @@ export class MultiplayerGame extends Scene {
       clearInterval(this.waitingCheckInterval);
       this.waitingCheckInterval = null;
     }
-    
+
     // CRITICAL: Leave game on shutdown to clean up Redis keys
     if (this.gameId) {
       console.log(`[MultiplayerGame] Leaving game ${this.gameId} on shutdown`);
@@ -91,21 +91,19 @@ export class MultiplayerGame extends Scene {
     this.counter.setDisplaySize(width, 100);
 
     // Cooking pot on top of counter
-    this.pot = this.add.image(width / 2, height - 120, 'pot');
-    this.pot.setScale(0.3);
+    this.pot = this.physics.add.image(width / 2, height - 120, 'pot'); this.pot.setDisplaySize(300, 300); const potBody = this.pot.body as Phaser.Physics.Arcade.Body; potBody.setImmovable(true);
+    // So it blocks other objects
+    potBody.setAllowGravity(false);
+    // So it doesn't fall
+    potBody.setSize(this.pot.width * 0.9, this.pot.height * 0.6);
+    potBody.setOffset(this.pot.width * 0.05, this.pot.height * 0.4);
 
-    // Add physics to pot to block player movement
-    this.physics.add.existing(this.pot, true); // true = static body
-    (this.pot.body as Phaser.Physics.Arcade.StaticBody).setSize(
-      this.pot.width * 0.6,
-      this.pot.height * 0.4
-    );
 
-    // Pot shaking animation
+
     this.tweens.add({
       targets: this.pot,
-      x: width / 2 - 4,
-      duration: 80,
+      y: height - 125,
+      duration: 600,
       yoyo: true,
       repeat: -1,
       ease: 'Sine.easeInOut',
@@ -113,21 +111,13 @@ export class MultiplayerGame extends Scene {
 
     this.tweens.add({
       targets: this.pot,
-      y: height - 118,
-      duration: 100,
+      angle: -1,
+      duration: 700,
       yoyo: true,
       repeat: -1,
       ease: 'Sine.easeInOut',
     });
 
-    this.tweens.add({
-      targets: this.pot,
-      angle: -2,
-      duration: 120,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut',
-    });
 
     // Player 1 (left side)
     this.player1 = this.add.image(150, height - 120, 'cup');
@@ -135,26 +125,26 @@ export class MultiplayerGame extends Scene {
     this.player1.setTint(0xff6b6b);
     this.physics.add.existing(this.player1);
     (this.player1.body as Phaser.Physics.Arcade.Body).setCollideWorldBounds(true);
-    (this.player1.body as Phaser.Physics.Arcade.Body).setImmovable(true);
+    (this.player1.body as Phaser.Physics.Arcade.Body).setImmovable(false);
     (this.player1.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
     (this.player1.body as Phaser.Physics.Arcade.Body).setSize(
       this.player1.width * 0.8,
       this.player1.height * 0.6
     );
-
+    this.physics.add.collider(this.player1, this.pot);
     // Player 2 (right side)
     this.player2 = this.add.image(width - 150, height - 120, 'cup');
     this.player2.setDisplaySize(100, 100); // Same as solo
     this.player2.setTint(0x4ecdc4);
     this.physics.add.existing(this.player2);
     (this.player2.body as Phaser.Physics.Arcade.Body).setCollideWorldBounds(true);
-    (this.player2.body as Phaser.Physics.Arcade.Body).setImmovable(true);
+    (this.player2.body as Phaser.Physics.Arcade.Body).setImmovable(false);
     (this.player2.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
     (this.player2.body as Phaser.Physics.Arcade.Body).setSize(
       this.player2.width * 0.8,
       this.player2.height * 0.6
     );
-
+    this.physics.add.collider(this.player2, this.pot);
     // Idle animations
     this.tweens.add({
       targets: this.player1,
@@ -265,9 +255,7 @@ export class MultiplayerGame extends Scene {
       this
     );
 
-    // Add collision between players and pot (blocks movement)
-    this.physics.add.collider(this.player1, this.pot);
-    this.physics.add.collider(this.player2, this.pot);
+
 
     // Don't start game yet - wait for both players
     this.waitForBothPlayers();
@@ -454,55 +442,36 @@ export class MultiplayerGame extends Scene {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   }
 
-  private spawnPopcorn(): void {
+  private spawnChaosPopcorn(): void {
     if (!this.isGameActive) return;
 
-    const { width, height } = this.scale;
-    const potX = width / 2;
-    const potY = height - 120;
+    const { width } = this.scale;
+    // Spawn from random side (left or right edge)
+    const spawnFromLeft = Math.random() < 0.5;
+    const spawnX = spawnFromLeft ? 50 : width - 50;
+    const spawnY = 100; // Top of screen
 
-    const popcorn = this.popcornGroup.get(potX, potY, 'popcorn') as Phaser.Physics.Arcade.Sprite;
+    const popcorn = this.popcornGroup.get(spawnX, spawnY, 'popcorn') as Phaser.Physics.Arcade.Sprite;
 
     if (popcorn) {
       popcorn.setActive(true);
       popcorn.setVisible(true);
       popcorn.setDisplaySize(40, 40);
 
-      // Determine popcorn type: 70% normal (white), 20% red (+10), 10% blue (+20)
-      const rand = Math.random();
-      let popcornType: 'normal' | 'red' | 'blue';
-      let popcornValue: number;
+      // Chaos popcorn is always normal (white)
+      popcorn.clearTint();
+      popcorn.setData('value', 1);
+      popcorn.setData('type', 'normal');
 
-      if (rand < 0.7) {
-        popcornType = 'normal';
-        popcornValue = 1;
-        popcorn.clearTint();
-      } else if (rand < 0.9) {
-        popcornType = 'red';
-        popcornValue = 10;
-        popcorn.setTint(0xff0000); // Red tint
-      } else {
-        popcornType = 'blue';
-        popcornValue = 20;
-        popcorn.setTint(0x0088ff); // Blue tint
-      }
-
-      // Store the value in the popcorn's data
-      popcorn.setData('value', popcornValue);
-      popcorn.setData('type', popcornType);
-
-      // Random launch velocity
-      const horizontalSpeed = Phaser.Math.Between(100, 250);
-      const horizontalDirection = Phaser.Math.Between(0, 1) === 0 ? -1 : 1;
-      const verticalSpeed = Phaser.Math.Between(-450, -300);
+      // Launch toward center with high speed
+      const horizontalSpeed = Phaser.Math.Between(200, 350);
+      const horizontalDirection = spawnFromLeft ? 1 : -1;
+      const verticalSpeed = Phaser.Math.Between(100, 300);
 
       popcorn.setVelocity(horizontalSpeed * horizontalDirection, verticalSpeed);
-      popcorn.setAngularVelocity(Phaser.Math.Between(-200, 200));
+      popcorn.setAngularVelocity(Phaser.Math.Between(-300, 300));
       popcorn.setBounce(0.3);
       popcorn.setCollideWorldBounds(false);
-
-      // Screen shake
-      this.cameras.main.shake(50, 0.002);
 
       // Destroy when off-screen
       const checkOffScreen = this.time.addEvent({
@@ -524,8 +493,86 @@ export class MultiplayerGame extends Scene {
     }
   }
 
+  private spawnPopcorn(): void {
+    if (!this.isGameActive) return;
+
+    const { width, height } = this.scale;
+    const potX = width / 2;
+    const potY = height - 120;
+
+    // Spawn 2-3 popcorn pieces at once for more excitement
+    const spawnCount = Phaser.Math.Between(2, 3);
+
+    for (let i = 0; i < spawnCount; i++) {
+      // Slight delay between spawns for visual effect
+      this.time.delayedCall(i * 50, () => {
+        const popcorn = this.popcornGroup.get(potX, potY, 'popcorn') as Phaser.Physics.Arcade.Sprite;
+
+        if (popcorn) {
+          popcorn.setActive(true);
+          popcorn.setVisible(true);
+          popcorn.setDisplaySize(40, 40);
+
+          // Determine popcorn type: 70% normal (white), 20% red (-10 penalty), 10% blue (+20)
+          const rand = Math.random();
+          let popcornType: 'normal' | 'red' | 'blue';
+          let popcornValue: number;
+
+          if (rand < 0.7) {
+            popcornType = 'normal';
+            popcornValue = 1;
+            popcorn.clearTint();
+          } else if (rand < 0.9) {
+            popcornType = 'red';
+            popcornValue = -10; // PENALTY: Red popcorn now subtracts points
+            popcorn.setTint(0xff0000); // Red tint
+          } else {
+            popcornType = 'blue';
+            popcornValue = 20;
+            popcorn.setTint(0x0088ff); // Blue tint
+          }
+
+          // Store the value in the popcorn's data
+          popcorn.setData('value', popcornValue);
+          popcorn.setData('type', popcornType);
+
+          // Random launch velocity with wider spread
+          const horizontalSpeed = Phaser.Math.Between(150, 300);
+          const horizontalDirection = Phaser.Math.Between(0, 1) === 0 ? -1 : 1;
+          const verticalSpeed = Phaser.Math.Between(-450, -300);
+
+          popcorn.setVelocity(horizontalSpeed * horizontalDirection, verticalSpeed);
+          popcorn.setAngularVelocity(Phaser.Math.Between(-200, 200));
+          popcorn.setBounce(0.3);
+          popcorn.setCollideWorldBounds(false);
+
+          // Screen shake
+          this.cameras.main.shake(50, 0.002);
+
+          // Destroy when off-screen
+          const checkOffScreen = this.time.addEvent({
+            delay: 100,
+            callback: () => {
+              if (
+                popcorn.active &&
+                (popcorn.y > this.scale.height + 50 ||
+                  popcorn.x < -50 ||
+                  popcorn.x > this.scale.width + 50)
+              ) {
+                popcorn.setActive(false);
+                popcorn.setVisible(false);
+                checkOffScreen.remove();
+              }
+            },
+            loop: true,
+          });
+        }
+      });
+    }
+  }
+
   private catchPopcorn(
-    playerObj: Phaser.GameObjects.GameObject,
+    _playerObj: Phaser.GameObjects.GameObject,
     popcornObj: Phaser.GameObjects.GameObject,
     playerNum: number
   ): void {
@@ -557,20 +604,34 @@ export class MultiplayerGame extends Scene {
     // Update score locally and send to server
     if (playerNum === 1) {
       this.player1Score += popcornValue;
+      // Prevent negative scores
+      if (this.player1Score < 0) this.player1Score = 0;
       this.player1ScoreText.setText(`P1: ${this.player1Score}`);
-      console.log(`[MultiplayerGame] P1 caught ${popcornType} popcorn (+${popcornValue}), score now: ${this.player1Score}`);
+      console.log(`[MultiplayerGame] P1 caught ${popcornType} popcorn (${popcornValue > 0 ? '+' : ''}${popcornValue}), score now: ${this.player1Score}`);
       void this.sendScore(this.player1Score);
     } else {
       this.player2Score += popcornValue;
+      // Prevent negative scores
+      if (this.player2Score < 0) this.player2Score = 0;
       this.player2ScoreText.setText(`P2: ${this.player2Score}`);
-      console.log(`[MultiplayerGame] P2 caught ${popcornType} popcorn (+${popcornValue}), score now: ${this.player2Score}`);
+      console.log(`[MultiplayerGame] P2 caught ${popcornType} popcorn (${popcornValue > 0 ? '+' : ''}${popcornValue}), score now: ${this.player2Score}`);
       void this.sendScore(this.player2Score);
+    }
+
+    // Red popcorn penalty: spawn extra popcorn chaos!
+    if (popcornType === 'red') {
+      // Spawn 5 extra popcorn pieces from both sides
+      for (let i = 0; i < 5; i++) {
+        this.time.delayedCall(i * 100, () => {
+          this.spawnChaosPopcorn();
+        });
+      }
     }
 
     // Show score popup for special popcorn
     if (popcornType !== 'normal') {
       const scorePopup = this.add
-        .text(popcornSprite.x, popcornSprite.y, `+${popcornValue}`, {
+        .text(popcornSprite.x, popcornSprite.y, popcornValue > 0 ? `+${popcornValue}` : `${popcornValue}`, {
           fontFamily: 'Arial Black',
           fontSize: '32px',
           color: popcornType === 'red' ? '#ff0000' : '#0088ff',
@@ -867,7 +928,7 @@ export class MultiplayerGame extends Scene {
     }
 
     // Show disconnect message
-    const disconnectText = this.add
+    this.add
       .text(this.scale.width / 2, this.scale.height / 2, 'OPPONENT LEFT\n\nReturning to menu...', {
         fontFamily: 'Arial Black',
         fontSize: '36px',

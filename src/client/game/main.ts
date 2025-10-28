@@ -1,6 +1,7 @@
 import { Boot } from './scenes/Boot';
 import { MainMenu } from './scenes/MainMenu';
 import { ModeSelect } from './scenes/ModeSelect';
+import { HowToPlay } from './scenes/HowToPlay';
 import { SoloGame } from './scenes/SoloGame';
 import { SoloGameOver } from './scenes/SoloGameOver';
 import { MultiplayerLobby } from './scenes/MultiplayerLobby';
@@ -34,6 +35,7 @@ const config: Phaser.Types.Core.GameConfig = {
     Preloader,
     MainMenu,
     ModeSelect,
+    HowToPlay,
     SoloGame,
     SoloGameOver,
     MultiplayerLobby,

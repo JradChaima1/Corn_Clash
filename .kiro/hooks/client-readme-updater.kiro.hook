@@ -4,7 +4,7 @@
   "description": "Monitors the client folder for significant updates and automatically updates the README.md file with current game description, innovative features, and play instructions",
   "version": "1",
   "when": {
-    "type": "fileEdited",
+    "type": "userTriggered",
     "patterns": [
       "src/client/**/*"
     ]
