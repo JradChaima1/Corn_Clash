@@ -13,12 +13,12 @@ const GAME_TTL = 120; // 2 minutes in seconds
 const GAME_EXPIRY_THRESHOLD = 120000; // 2 minutes in milliseconds
 const MAX_RETRY_ATTEMPTS = 3;
 const READY_TIMEOUT = 30000; // 30 seconds in milliseconds
-const DISCONNECT_THRESHOLD = 3000; // 3 seconds in milliseconds
+const DISCONNECT_THRESHOLD = 5000; // 5 seconds in milliseconds (increased to reduce false positives)
 
 export class MultiplayerGameManager {
   private static instance: MultiplayerGameManager;
 
-  private constructor() { }
+  private constructor() {}
 
   static getInstance(): MultiplayerGameManager {
     if (!MultiplayerGameManager.instance) {
@@ -40,7 +40,9 @@ export class MultiplayerGameManager {
         return { gameState: game, playerRole };
       } else {
         // Game doesn't exist or is finished - clean up stale player key
-        console.log(`[Multiplayer] Cleaning up stale player key for ${playerId} (game ${existingGameId} not found or finished)`);
+        console.log(
+          `[Multiplayer] Cleaning up stale player key for ${playerId} (game ${existingGameId} not found or finished)`
+        );
         await redis.del(`${REDIS_PLAYER_GAME_PREFIX}${playerId}`);
       }
     }
@@ -50,11 +52,12 @@ export class MultiplayerGameManager {
     let waitingGames: string[] = [];
     try {
       const waitingGamesResult = await redis.zRange(REDIS_WAITING_GAMES, 0, -1, { by: 'rank' });
-      waitingGames = waitingGamesResult.map(item => item.member);
+      waitingGames = waitingGamesResult.map((item) => item.member);
       console.log(`[Multiplayer] Waiting games in Redis: ${waitingGames.length}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Handle WRONGTYPE error - key exists with wrong data type
-      if (error?.details?.includes('WRONGTYPE')) {
+      const err = error as { details?: string };
+      if (err?.details?.includes('WRONGTYPE')) {
         console.log(`[Multiplayer] Fixing corrupted waiting games key - deleting and recreating`);
         await redis.del(REDIS_WAITING_GAMES);
         waitingGames = [];
@@ -77,7 +80,12 @@ export class MultiplayerGameManager {
       );
 
       // Clean up invalid games (non-zero scores, expired, or finished)
-      if (game.player1Score > 0 || game.player2Score > 0 || game.status !== 'waiting' || this.isGameExpired(game.createdAt)) {
+      if (
+        game.player1Score > 0 ||
+        game.player2Score > 0 ||
+        game.status !== 'waiting' ||
+        this.isGameExpired(game.createdAt)
+      ) {
         console.log(`[Multiplayer] Cleaning up invalid game ${gameId}`);
         await redis.del(`${REDIS_GAME_PREFIX}${gameId}`);
         await redis.zRem(REDIS_WAITING_GAMES, [gameId]);
@@ -108,7 +116,9 @@ export class MultiplayerGameManager {
         if (success) {
           const updatedGame = await this.getGameState(gameId);
           if (updatedGame) {
-            console.log(`[Multiplayer] Player ${playerId} successfully joined game ${gameId} as player2`);
+            console.log(
+              `[Multiplayer] Player ${playerId} successfully joined game ${gameId} as player2`
+            );
             return { gameState: updatedGame, playerRole: 'player2' };
           }
         }
@@ -138,7 +148,16 @@ export class MultiplayerGameManager {
     throw new Error('Failed to create or join game after retries');
   }
 
-  async sendReady(gameId: string, playerId: string): Promise<{ success: boolean; bothReady: boolean; startTime?: number; timeout?: boolean; message?: string }> {
+  async sendReady(
+    gameId: string,
+    playerId: string
+  ): Promise<{
+    success: boolean;
+    bothReady: boolean;
+    startTime?: number;
+    timeout?: boolean;
+    message?: string;
+  }> {
     console.log(`[Multiplayer] Player ${playerId} sending ready signal for game ${gameId}`);
 
     const game = await this.getGameState(gameId);
@@ -165,7 +184,12 @@ export class MultiplayerGameManager {
       game.player1Ready = null;
       game.player2Ready = null;
       await redis.set(`${REDIS_GAME_PREFIX}${gameId}`, JSON.stringify(game));
-      return { success: false, bothReady: false, timeout: true, message: 'Ready timeout exceeded, please try again' };
+      return {
+        success: false,
+        bothReady: false,
+        timeout: true,
+        message: 'Ready timeout exceeded, please try again',
+      };
     }
 
     if (player2ReadyTime && now - player2ReadyTime > READY_TIMEOUT) {
@@ -174,7 +198,12 @@ export class MultiplayerGameManager {
       game.player1Ready = null;
       game.player2Ready = null;
       await redis.set(`${REDIS_GAME_PREFIX}${gameId}`, JSON.stringify(game));
-      return { success: false, bothReady: false, timeout: true, message: 'Ready timeout exceeded, please try again' };
+      return {
+        success: false,
+        bothReady: false,
+        timeout: true,
+        message: 'Ready timeout exceeded, please try again',
+      };
     }
 
     // Set ready timestamp for the player
@@ -197,7 +226,9 @@ export class MultiplayerGameManager {
       const startTime = Date.now();
       game.status = 'playing';
       game.startTime = startTime;
-      console.log(`[Multiplayer] Both players ready, transitioning game ${gameId} to playing with startTime ${startTime}`);
+      console.log(
+        `[Multiplayer] Both players ready, transitioning game ${gameId} to playing with startTime ${startTime}`
+      );
 
       await redis.set(`${REDIS_GAME_PREFIX}${gameId}`, JSON.stringify(game));
 
@@ -231,11 +262,7 @@ export class MultiplayerGameManager {
     return game;
   }
 
-  async updatePlayerPosition(
-    gameId: string,
-    playerId: string,
-    position: number
-  ): Promise<boolean> {
+  async updatePlayerPosition(gameId: string, playerId: string, position: number): Promise<boolean> {
     try {
       if (!gameId || !playerId || position === undefined) {
         console.error('[Multiplayer] Invalid parameters for updatePlayerPosition');
@@ -265,34 +292,64 @@ export class MultiplayerGameManager {
     }
   }
 
-  async updateScore(
-    gameId: string,
-    playerId: string,
-    score: number
-  ): Promise<boolean> {
+  async updateScore(gameId: string, playerId: string, score: number): Promise<boolean> {
     try {
       if (!gameId || !playerId || score === undefined) {
         console.error('[Multiplayer] Invalid parameters for updateScore');
         return false;
       }
 
-      const game = await this.getGameState(gameId);
-      if (!game) {
-        console.error(`[Multiplayer] Game ${gameId} not found for score update`);
-        return false;
+      const gameKey = `${REDIS_GAME_PREFIX}${gameId}`;
+
+      // Use optimistic locking with retry logic to prevent race conditions
+      const maxRetries = 5;
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        // Watch the game key for changes
+        const txn = await redis.watch(gameKey);
+
+        const game = await this.getGameState(gameId);
+        if (!game) {
+          console.error(`[Multiplayer] Game ${gameId} not found for score update`);
+          return false;
+        }
+
+        // Determine which player and update their score
+        let scoreField: 'player1Score' | 'player2Score' | null = null;
+        if (game.player1Id === playerId) {
+          scoreField = 'player1Score';
+          game.player1Score = score;
+        } else if (game.player2Id === playerId) {
+          scoreField = 'player2Score';
+          game.player2Score = score;
+        } else {
+          console.error(`[Multiplayer] Player ${playerId} not in game ${gameId}`);
+          return false;
+        }
+
+        // Execute transaction - will fail if key was modified
+        try {
+          await txn.set(gameKey, JSON.stringify(game));
+          const result = await txn.exec();
+
+          if (result) {
+            console.log(
+              `[Multiplayer] Score updated for ${playerId} in game ${gameId}: ${scoreField}=${score}`
+            );
+            return true;
+          }
+        } catch (txnError) {
+          // Transaction failed, retry
+          console.log(
+            `[Multiplayer] Score update conflict, retrying (attempt ${attempt + 1}/${maxRetries})`
+          );
+          // Small delay before retry to reduce contention
+          await new Promise<void>((resolve) => setTimeout(resolve, 10 * (attempt + 1)));
+          continue;
+        }
       }
 
-      if (game.player1Id === playerId) {
-        game.player1Score = score;
-      } else if (game.player2Id === playerId) {
-        game.player2Score = score;
-      } else {
-        console.error(`[Multiplayer] Player ${playerId} not in game ${gameId}`);
-        return false;
-      }
-
-      await redis.set(`${REDIS_GAME_PREFIX}${gameId}`, JSON.stringify(game));
-      return true;
+      console.error(`[Multiplayer] Failed to update score after ${maxRetries} attempts`);
+      return false;
     } catch (error) {
       console.error('[Multiplayer] Error updating score:', error);
       return false;
@@ -315,7 +372,9 @@ export class MultiplayerGameManager {
 
     // If game is still waiting (not started), delete the game and clean up both players
     if (game.status === 'waiting') {
-      console.log(`[Multiplayer] Game ${gameId} was waiting, deleting it and cleaning up both players`);
+      console.log(
+        `[Multiplayer] Game ${gameId} was waiting, deleting it and cleaning up both players`
+      );
 
       // Clean up both players' keys
       if (game.player1Id) {
@@ -391,7 +450,9 @@ export class MultiplayerGameManager {
    * Check for disconnected players in a game
    * Returns disconnect info if any player is disconnected
    */
-  async checkPlayerActivity(gameId: string): Promise<{ disconnected: boolean; playerId?: string | null }> {
+  async checkPlayerActivity(
+    gameId: string
+  ): Promise<{ disconnected: boolean; playerId?: string | null }> {
     const game = await this.getGameState(gameId);
 
     if (!game || game.status !== 'playing') {
@@ -423,10 +484,11 @@ export class MultiplayerGameManager {
     let waitingGames: string[] = [];
     try {
       const waitingGamesResult = await redis.zRange(REDIS_WAITING_GAMES, 0, -1, { by: 'rank' });
-      waitingGames = waitingGamesResult.map(item => item.member);
-    } catch (error: any) {
+      waitingGames = waitingGamesResult.map((item) => item.member);
+    } catch (error: unknown) {
       // Handle WRONGTYPE error - key exists with wrong data type
-      if (error?.details?.includes('WRONGTYPE')) {
+      const err = error as { details?: string };
+      if (err?.details?.includes('WRONGTYPE')) {
         console.log(`[Multiplayer] Fixing corrupted waiting games key during cleanup`);
         await redis.del(REDIS_WAITING_GAMES);
         return 0;
@@ -448,7 +510,9 @@ export class MultiplayerGameManager {
 
       // Check if game is expired
       if (this.isGameExpired(game.createdAt)) {
-        console.log(`[Multiplayer] Cleaning up expired game ${gameId} (created ${new Date(game.createdAt).toISOString()})`);
+        console.log(
+          `[Multiplayer] Cleaning up expired game ${gameId} (created ${new Date(game.createdAt).toISOString()})`
+        );
 
         // Delete player game keys
         if (game.player1Id) {
@@ -573,7 +637,9 @@ export class MultiplayerGameManager {
 
       // Execute atomic create
       await txn.multi();
-      await txn.set(gameKey, JSON.stringify(newGame), { expiration: new Date(Date.now() + GAME_TTL * 1000) });
+      await txn.set(gameKey, JSON.stringify(newGame), {
+        expiration: new Date(Date.now() + GAME_TTL * 1000),
+      });
       await txn.set(playerGameKey, gameId, { expiration: new Date(Date.now() + GAME_TTL * 1000) });
       // Use zAdd with current timestamp as score for sorted set
       await txn.zAdd(REDIS_WAITING_GAMES, { member: gameId, score: Date.now() });
@@ -581,7 +647,9 @@ export class MultiplayerGameManager {
       const result = await txn.exec();
       // exec() returns null if transaction was aborted (watched key changed)
       if (result === null) {
-        console.log(`[Multiplayer] Transaction aborted - player ${playerId} already has a game key`);
+        console.log(
+          `[Multiplayer] Transaction aborted - player ${playerId} already has a game key`
+        );
         return false;
       }
       return true;
@@ -607,10 +675,9 @@ export class MultiplayerGameManager {
         }
         // Exponential backoff: 100ms, 200ms, 400ms
         const delay = 100 * Math.pow(2, attempt - 1);
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
     throw new Error('Max retries exceeded');
   }
-
 }

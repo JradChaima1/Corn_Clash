@@ -1,6 +1,6 @@
 # Product Overview
 
-**Popcorn Catch** (corn-clash) is a fast-paced arcade game built with Phaser.js that runs natively on Reddit via the Devvit platform.
+**CornClash** (corn-clash) is a fast-paced arcade game built with Phaser.js that runs natively on Reddit via the Devvit platform.
 
 ## Core Concept
 

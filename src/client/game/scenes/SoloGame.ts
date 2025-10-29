@@ -19,8 +19,6 @@ export class SoloGame extends Scene {
 
   private pot!: Phaser.GameObjects.Image;
 
-
-
   private player!: Phaser.GameObjects.Image;
   private popcornGroup!: Phaser.Physics.Arcade.Group;
 
@@ -55,14 +53,15 @@ export class SoloGame extends Scene {
     this.counter = this.add.image(width / 2, height - 50, 'counter');
     this.counter.setDisplaySize(width, 100);
 
-    this.pot = this.physics.add.image(width / 2, height - 120, 'pot'); this.pot.setDisplaySize(300, 300); const potBody = this.pot.body as Phaser.Physics.Arcade.Body; potBody.setImmovable(true);
+    this.pot = this.physics.add.image(width / 2, height - 120, 'pot');
+    this.pot.setDisplaySize(300, 300);
+    const potBody = this.pot.body as Phaser.Physics.Arcade.Body;
+    potBody.setImmovable(true);
     // So it blocks other objects
     potBody.setAllowGravity(false);
     // So it doesn't fall
     potBody.setSize(this.pot.width * 0.9, this.pot.height * 0.6);
     potBody.setOffset(this.pot.width * 0.05, this.pot.height * 0.4);
-
-
 
     this.tweens.add({
       targets: this.pot,
@@ -95,7 +94,6 @@ export class SoloGame extends Scene {
 
     // Add collision so the cup cannot pass through the pot
     this.physics.add.collider(this.player, this.pot);
-
 
     // Idle animation for player (subtle bounce)
     this.tweens.add({
@@ -161,8 +159,6 @@ export class SoloGame extends Scene {
       undefined,
       this
     );
-
-
 
     // Main Menu button (top-right corner, smaller)
     const mainMenuButton = ButtonFactory.createButton(
@@ -249,7 +245,11 @@ export class SoloGame extends Scene {
     const spawnX = spawnFromLeft ? 50 : width - 50;
     const spawnY = 100; // Top of screen
 
-    const popcorn = this.popcornGroup.get(spawnX, spawnY, 'popcorn') as Phaser.Physics.Arcade.Sprite;
+    const popcorn = this.popcornGroup.get(
+      spawnX,
+      spawnY,
+      'popcorn'
+    ) as Phaser.Physics.Arcade.Sprite;
 
     if (popcorn) {
       popcorn.setActive(true);
@@ -304,7 +304,11 @@ export class SoloGame extends Scene {
     for (let i = 0; i < spawnCount; i++) {
       // Slight delay between spawns for visual effect
       this.time.delayedCall(i * 50, () => {
-        const popcorn = this.popcornGroup.get(potX, potY, 'popcorn') as Phaser.Physics.Arcade.Sprite;
+        const popcorn = this.popcornGroup.get(
+          potX,
+          potY,
+          'popcorn'
+        ) as Phaser.Physics.Arcade.Sprite;
 
         if (popcorn) {
           popcorn.setActive(true);
@@ -407,13 +411,18 @@ export class SoloGame extends Scene {
     // Show score popup for special popcorn
     if (popcornType !== 'normal') {
       const scorePopup = this.add
-        .text(popcornSprite.x, popcornSprite.y, popcornValue > 0 ? `+${popcornValue}` : `${popcornValue}`, {
-          fontFamily: 'Arial Black',
-          fontSize: '32px',
-          color: popcornType === 'red' ? '#ff0000' : '#0088ff',
-          stroke: '#000000',
-          strokeThickness: 4,
-        })
+        .text(
+          popcornSprite.x,
+          popcornSprite.y,
+          popcornValue > 0 ? `+${popcornValue}` : `${popcornValue}`,
+          {
+            fontFamily: 'Arial Black',
+            fontSize: '32px',
+            color: popcornType === 'red' ? '#ff0000' : '#0088ff',
+            stroke: '#000000',
+            strokeThickness: 4,
+          }
+        )
         .setOrigin(0.5);
 
       this.tweens.add({

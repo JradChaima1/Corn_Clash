@@ -34,7 +34,7 @@ describe('MultiplayerGameManager Unit Tests', () => {
     it('should create new game for first player', async () => {
       // Mock: No existing player game
       (redis.get as any).mockResolvedValue(null);
-      
+
       // Mock: No waiting games
       (redis.zRange as any).mockResolvedValue([]);
 
@@ -87,7 +87,7 @@ describe('MultiplayerGameManager Unit Tests', () => {
     it('should join existing game as second player', async () => {
       const gameId = 'test_game_123';
       let joinAttempted = false;
-      
+
       // Mock: No existing player game for player2
       (redis.get as any).mockImplementation(async (key: string) => {
         if (key === `popcorn_player_game:${player2Id}`) {
@@ -143,7 +143,7 @@ describe('MultiplayerGameManager Unit Tests', () => {
     it('should prevent self-matching', async () => {
       const gameId = 'test_game_123';
       let newGameCreated = false;
-      
+
       // Mock: No existing player game
       (redis.get as any).mockImplementation(async (key: string) => {
         if (key === `popcorn_player_game:${player1Id}`) {
@@ -222,7 +222,7 @@ describe('MultiplayerGameManager Unit Tests', () => {
 
     it('should prevent duplicate joins', async () => {
       const gameId = 'test_game_123';
-      
+
       // Mock: Player already in a game
       (redis.get as any).mockImplementation(async (key: string) => {
         if (key === `popcorn_player_game:${player1Id}`) {
@@ -267,7 +267,7 @@ describe('MultiplayerGameManager Unit Tests', () => {
 
     it('should record timestamps correctly', async () => {
       const now = Date.now();
-      
+
       const gameState: GameState = {
         gameId,
         status: 'waiting',
@@ -296,7 +296,7 @@ describe('MultiplayerGameManager Unit Tests', () => {
       expect(result.success).toBe(true);
       expect(result.bothReady).toBe(false);
       expect(redis.set).toHaveBeenCalled();
-      
+
       // Verify the game state was updated with ready timestamp
       const setCall = (redis.set as any).mock.calls[0];
       const updatedGame = JSON.parse(setCall[1]);
@@ -305,7 +305,7 @@ describe('MultiplayerGameManager Unit Tests', () => {
 
     it('should transition to playing when both ready', async () => {
       const now = Date.now();
-      
+
       const gameState: GameState = {
         gameId,
         status: 'waiting',
@@ -334,7 +334,7 @@ describe('MultiplayerGameManager Unit Tests', () => {
       expect(result.success).toBe(true);
       expect(result.bothReady).toBe(true);
       expect(result.startTime).toBeDefined();
-      
+
       // Verify the game state was updated to playing
       const setCall = (redis.set as any).mock.calls[0];
       const updatedGame = JSON.parse(setCall[1]);
@@ -344,7 +344,7 @@ describe('MultiplayerGameManager Unit Tests', () => {
 
     it('should handle timeout after 30 seconds', async () => {
       const oldTimestamp = Date.now() - 35000; // 35 seconds ago
-      
+
       const gameState: GameState = {
         gameId,
         status: 'waiting',
@@ -373,7 +373,7 @@ describe('MultiplayerGameManager Unit Tests', () => {
       expect(result.success).toBe(false);
       expect(result.timeout).toBe(true);
       expect(result.message).toContain('timeout');
-      
+
       // Verify ready flags were reset
       const setCall = (redis.set as any).mock.calls[0];
       const updatedGame = JSON.parse(setCall[1]);
@@ -551,7 +551,7 @@ describe('MultiplayerGameManager Unit Tests', () => {
   describe('Atomic operations', () => {
     it('should handle race conditions with WATCH/MULTI/EXEC', async () => {
       const gameId = 'test_game_123';
-      
+
       // Mock: No existing player game
       (redis.get as any).mockImplementation(async (key: string) => {
         if (key === `popcorn_player_game:${player2Id}`) {
@@ -609,7 +609,7 @@ describe('MultiplayerGameManager Unit Tests', () => {
     it('should retry on transaction failure', async () => {
       // Mock: No existing player game
       (redis.get as any).mockResolvedValue(null);
-      
+
       // Mock: No waiting games
       (redis.zRange as any).mockResolvedValue([]);
 

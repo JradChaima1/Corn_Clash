@@ -46,14 +46,19 @@ export class HowToPlay extends Scene {
       .setOrigin(0.5);
 
     this.add
-      .text(width / 2, 155, 'Catch flying popcorn with your cup!\nAvoid the red popcorn - it\'s a penalty!', {
-        fontFamily: 'Arial',
-        fontSize: '18px',
-        color: '#FFFFFF',
-        stroke: '#000000',
-        strokeThickness: 3,
-        align: 'center',
-      })
+      .text(
+        width / 2,
+        155,
+        "Catch flying popcorn with your cup!\nAvoid the red popcorn - it's a penalty!",
+        {
+          fontFamily: 'Arial',
+          fontSize: '18px',
+          color: '#FFFFFF',
+          stroke: '#000000',
+          strokeThickness: 3,
+          align: 'center',
+        }
+      )
       .setOrigin(0.5);
 
     // Controls Section
@@ -121,7 +126,7 @@ export class HowToPlay extends Scene {
       .setOrigin(0.5);
 
     // Normal popcorn
-    this.add.circle(100, 465, 15, 0xFFFFFF);
+    this.add.circle(100, 465, 15, 0xffffff);
     this.add
       .text(130, 465, 'White Popcorn = +1 point', {
         fontFamily: 'Arial',
@@ -133,7 +138,7 @@ export class HowToPlay extends Scene {
       .setOrigin(0, 0.5);
 
     // Red popcorn (penalty)
-    this.add.circle(100, 495, 15, 0xFF0000);
+    this.add.circle(100, 495, 15, 0xff0000);
     this.add
       .text(130, 495, 'Red Popcorn = -10 points + Extra Chaos!', {
         fontFamily: 'Arial',
@@ -145,7 +150,7 @@ export class HowToPlay extends Scene {
       .setOrigin(0, 0.5);
 
     // Blue popcorn
-    this.add.circle(100, 525, 15, 0x0088FF);
+    this.add.circle(100, 525, 15, 0x0088ff);
     this.add
       .text(130, 525, 'Blue Popcorn = +20 points', {
         fontFamily: 'Arial',
@@ -167,7 +172,12 @@ export class HowToPlay extends Scene {
       280
     );
     backButton.setInteractive(
-      new Phaser.Geom.Rectangle(-140, -30, 280, 60),
+      new Phaser.Geom.Rectangle(
+        -140,
+        -30,
+        280,
+        60
+      ) as unknown as Phaser.Types.Input.InputConfiguration,
       Phaser.Geom.Rectangle.Contains
     );
 

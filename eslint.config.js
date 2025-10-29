@@ -5,7 +5,7 @@ import tseslint from 'typescript-eslint';
 
 export default defineConfig([
   tseslint.configs.recommended,
-  { ignores: ['webroot'] },
+  { ignores: ['webroot', '**/*.test.ts'] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['tools/**/*.{ts,tsx,mjs,cjs,js}'],
@@ -27,7 +27,10 @@ export default defineConfig([
     files: ['src/client/**/*.{ts,tsx}'],
     languageOptions: {
       ecmaVersion: 2023,
-      globals: globals.browser,
+      globals: {
+        ...globals.browser,
+        Phaser: 'readonly',
+      },
     },
   },
   {

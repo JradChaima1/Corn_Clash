@@ -93,7 +93,7 @@ sequenceDiagram
     participant C1 as Client 1
     participant S as Server
     participant R as Redis
-    
+
     C1->>S: POST /api/multiplayer/join
     S->>R: WATCH popcorn_player_game:player1
     S->>R: GET popcorn_player_game:player1
@@ -129,7 +129,7 @@ sequenceDiagram
     participant C2 as Client 2
     participant S as Server
     participant R as Redis
-    
+
     C1->>S: POST /api/multiplayer/ready
     S->>R: HSET popcorn_game:{gameId} player1Ready timestamp
     S->>R: HGET popcorn_game:{gameId} player2Ready
@@ -140,9 +140,9 @@ sequenceDiagram
     else Only one ready
         S->>C1: Success (waiting)
     end
-    
+
     Note over C1,C2: Both clients poll /api/multiplayer/state
-    
+
     C2->>S: GET /api/multiplayer/state
     S->>R: HGETALL popcorn_game:{gameId}
     alt Status is "playing"
@@ -162,37 +162,37 @@ Singleton class managing all multiplayer game operations with atomic Redis trans
 ```typescript
 class MultiplayerGameManager {
   // Join or create a game with atomic operations
-  async joinGame(playerId: string): Promise<JoinGameResult>
-  
+  async joinGame(playerId: string): Promise<JoinGameResult>;
+
   // Send ready signal with timestamp
-  async sendReady(gameId: string, playerId: string): Promise<ReadyResult>
-  
+  async sendReady(gameId: string, playerId: string): Promise<ReadyResult>;
+
   // Get current game state with activity check
-  async getGameState(gameId: string, playerId?: string): Promise<GameState | null>
-  
+  async getGameState(gameId: string, playerId?: string): Promise<GameState | null>;
+
   // Update player position with activity timestamp
-  async updatePlayerPosition(gameId: string, playerId: string, position: number): Promise<boolean>
-  
+  async updatePlayerPosition(gameId: string, playerId: string, position: number): Promise<boolean>;
+
   // Update player score with activity timestamp
-  async updateScore(gameId: string, playerId: string, score: number): Promise<boolean>
-  
+  async updateScore(gameId: string, playerId: string, score: number): Promise<boolean>;
+
   // Leave game and trigger cleanup
-  async leaveGame(gameId: string, playerId: string): Promise<boolean>
-  
+  async leaveGame(gameId: string, playerId: string): Promise<boolean>;
+
   // End game and remove all data
-  async endGame(gameId: string): Promise<boolean>
-  
+  async endGame(gameId: string): Promise<boolean>;
+
   // Cleanup expired games (called periodically)
-  async cleanupExpiredGames(): Promise<number>
-  
+  async cleanupExpiredGames(): Promise<number>;
+
   // Check for disconnected players
-  async checkPlayerActivity(gameId: string): Promise<DisconnectInfo>
-  
+  async checkPlayerActivity(gameId: string): Promise<DisconnectInfo>;
+
   // Private helper methods
-  private executeAtomicJoin(playerId: string, gameId: string): Promise<boolean>
-  private executeAtomicCreate(playerId: string, gameId: string): Promise<boolean>
-  private isGameExpired(createdAt: number): boolean
-  private isPlayerDisconnected(lastActivity: number): boolean
+  private executeAtomicJoin(playerId: string, gameId: string): Promise<boolean>;
+  private executeAtomicCreate(playerId: string, gameId: string): Promise<boolean>;
+  private isGameExpired(createdAt: number): boolean;
+  private isPlayerDisconnected(lastActivity: number): boolean;
 }
 ```
 
@@ -238,26 +238,26 @@ Handles matchmaking and ready state.
 
 ```typescript
 class MultiplayerLobby extends Scene {
-  private gameId: string | null
-  private playerId: string | null
-  private playerRole: string | null
-  private pollInterval: number | null
-  private readyTimeout: NodeJS.Timeout | null
-  
+  private gameId: string | null;
+  private playerId: string | null;
+  private playerRole: string | null;
+  private pollInterval: number | null;
+  private readyTimeout: NodeJS.Timeout | null;
+
   // Join game and start polling
-  private async joinGame(): Promise<void>
-  
+  private async joinGame(): Promise<void>;
+
   // Send ready signal to server
-  private async sendReady(): Promise<void>
-  
+  private async sendReady(): Promise<void>;
+
   // Poll for game start (both players ready)
-  private pollForGameStart(): void
-  
+  private pollForGameStart(): void;
+
   // Leave game and cleanup
-  private async leaveGame(): Promise<void>
-  
+  private async leaveGame(): Promise<void>;
+
   // Cleanup on scene shutdown
-  shutdown(): void
+  shutdown(): void;
 }
 ```
 
@@ -267,27 +267,27 @@ Handles gameplay with synchronized timers and disconnect detection.
 
 ```typescript
 class MultiplayerGame extends Scene {
-  private gameId: string
-  private playerRole: string
-  private gameStartTime: number
-  private pollInterval: number | null
-  private gameTimer: Phaser.Time.TimerEvent | null
-  private lastServerPoll: number
-  
+  private gameId: string;
+  private playerRole: string;
+  private gameStartTime: number;
+  private pollInterval: number | null;
+  private gameTimer: Phaser.Time.TimerEvent | null;
+  private lastServerPoll: number;
+
   // Wait for both players to confirm receipt
-  private async waitForBothPlayers(): Promise<void>
-  
+  private async waitForBothPlayers(): Promise<void>;
+
   // Start game with server-synchronized timer
-  private async startGame(): Promise<void>
-  
+  private async startGame(): Promise<void>;
+
   // Poll for opponent state and detect disconnects
-  private async pollGameState(): Promise<void>
-  
+  private async pollGameState(): Promise<void>;
+
   // Handle opponent disconnect
-  private handleDisconnect(): void
-  
+  private handleDisconnect(): void;
+
   // Cleanup on scene shutdown
-  shutdown(): void
+  shutdown(): void;
 }
 ```
 
@@ -297,35 +297,35 @@ class MultiplayerGame extends Scene {
 
 ```typescript
 interface GameState {
-  gameId: string
-  status: 'waiting' | 'ready' | 'playing' | 'finished'
-  
+  gameId: string;
+  status: 'waiting' | 'ready' | 'playing' | 'finished';
+
   // Player identifiers
-  player1Id: string | null
-  player2Id: string | null
-  
+  player1Id: string | null;
+  player2Id: string | null;
+
   // Ready state (timestamps)
-  player1Ready: number | null
-  player2Ready: number | null
-  
+  player1Ready: number | null;
+  player2Ready: number | null;
+
   // Activity tracking (timestamps)
-  lastActivity1: number
-  lastActivity2: number
-  
+  lastActivity1: number;
+  lastActivity2: number;
+
   // Game data
-  player1Score: number
-  player2Score: number
-  player1Position: number
-  player2Position: number
-  popcornItems: PopcornItem[]
-  
+  player1Score: number;
+  player2Score: number;
+  player1Position: number;
+  player2Position: number;
+  popcornItems: PopcornItem[];
+
   // Timing
-  startTime: number | null  // Server timestamp when game started
-  createdAt: number         // Server timestamp when game created
-  timeRemaining: number     // Calculated from startTime
-  
+  startTime: number | null; // Server timestamp when game started
+  createdAt: number; // Server timestamp when game created
+  timeRemaining: number; // Calculated from startTime
+
   // Result
-  winner: string | null
+  winner: string | null;
 }
 ```
 
@@ -391,27 +391,27 @@ async function executeWithRetry<T>(
 ): Promise<T> {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      return await operation()
+      return await operation();
     } catch (error) {
-      if (attempt === maxRetries) throw error
-      await sleep(100 * attempt) // Exponential backoff
+      if (attempt === maxRetries) throw error;
+      await sleep(100 * attempt); // Exponential backoff
     }
   }
-  throw new Error('Max retries exceeded')
+  throw new Error('Max retries exceeded');
 }
 ```
 
 ### Error Scenarios
 
-| Scenario | Detection | Handling |
-|----------|-----------|----------|
-| Player joins twice | Check `popcorn_player_game:{playerId}` | Return existing game |
-| Self-matching | Compare player1Id with joining playerId | Delete old game, create new |
-| Ready timeout | Check timestamp difference (30s) | Reset to waiting, clear ready flags |
-| Game expiry | Check createdAt timestamp (2min) | Delete game, remove from queue |
-| Disconnect | Check lastActivity timestamp (3s) | Notify opponent, cleanup game |
-| Network failure | Consecutive failed polls (3x) | Show error, return to lobby |
-| Server error | HTTP status codes | Show error message, retry or exit |
+| Scenario           | Detection                               | Handling                            |
+| ------------------ | --------------------------------------- | ----------------------------------- |
+| Player joins twice | Check `popcorn_player_game:{playerId}`  | Return existing game                |
+| Self-matching      | Compare player1Id with joining playerId | Delete old game, create new         |
+| Ready timeout      | Check timestamp difference (30s)        | Reset to waiting, clear ready flags |
+| Game expiry        | Check createdAt timestamp (2min)        | Delete game, remove from queue      |
+| Disconnect         | Check lastActivity timestamp (3s)       | Notify opponent, cleanup game       |
+| Network failure    | Consecutive failed polls (3x)           | Show error, return to lobby         |
+| Server error       | HTTP status codes                       | Show error message, retry or exit   |
 
 ## Testing Strategy
 
@@ -422,29 +422,29 @@ Test individual manager methods with mocked Redis:
 ```typescript
 describe('MultiplayerGameManager', () => {
   describe('joinGame', () => {
-    it('should create new game for first player')
-    it('should join existing game as second player')
-    it('should prevent self-matching')
-    it('should prevent duplicate joins')
-    it('should handle race conditions with atomic operations')
-  })
-  
+    it('should create new game for first player');
+    it('should join existing game as second player');
+    it('should prevent self-matching');
+    it('should prevent duplicate joins');
+    it('should handle race conditions with atomic operations');
+  });
+
   describe('sendReady', () => {
-    it('should record ready timestamp')
-    it('should transition to playing when both ready')
-    it('should timeout after 30 seconds')
-  })
-  
+    it('should record ready timestamp');
+    it('should transition to playing when both ready');
+    it('should timeout after 30 seconds');
+  });
+
   describe('cleanupExpiredGames', () => {
-    it('should delete games older than 2 minutes')
-    it('should remove expired games from waiting queue')
-  })
-  
+    it('should delete games older than 2 minutes');
+    it('should remove expired games from waiting queue');
+  });
+
   describe('checkPlayerActivity', () => {
-    it('should detect disconnect after 3 seconds')
-    it('should not flag active players')
-  })
-})
+    it('should detect disconnect after 3 seconds');
+    it('should not flag active players');
+  });
+});
 ```
 
 ### Integration Tests
@@ -453,14 +453,14 @@ Test full API endpoints with real Redis:
 
 ```typescript
 describe('Multiplayer API', () => {
-  it('should handle complete join-ready-play-end flow')
-  it('should handle player leaving during waiting')
-  it('should handle player leaving during gameplay')
-  it('should handle ready timeout')
-  it('should handle game expiry')
-  it('should handle disconnect detection')
-  it('should prevent race conditions with concurrent joins')
-})
+  it('should handle complete join-ready-play-end flow');
+  it('should handle player leaving during waiting');
+  it('should handle player leaving during gameplay');
+  it('should handle ready timeout');
+  it('should handle game expiry');
+  it('should handle disconnect detection');
+  it('should prevent race conditions with concurrent joins');
+});
 ```
 
 ### Client Tests
@@ -469,17 +469,17 @@ Test scene lifecycle and cleanup:
 
 ```typescript
 describe('MultiplayerLobby', () => {
-  it('should cleanup polling on scene shutdown')
-  it('should cleanup polling on leave')
-  it('should handle ready timeout')
-})
+  it('should cleanup polling on scene shutdown');
+  it('should cleanup polling on leave');
+  it('should handle ready timeout');
+});
 
 describe('MultiplayerGame', () => {
-  it('should cleanup polling on scene shutdown')
-  it('should cleanup timers on game end')
-  it('should handle disconnect gracefully')
-  it('should synchronize timer with server startTime')
-})
+  it('should cleanup polling on scene shutdown');
+  it('should cleanup timers on game end');
+  it('should handle disconnect gracefully');
+  it('should synchronize timer with server startTime');
+});
 ```
 
 ## Implementation Details
@@ -496,24 +496,24 @@ async joinGame(playerId: string): Promise<JoinGameResult> {
       return { gameState: game, playerRole: this.getPlayerRole(game, playerId) }
     }
   }
-  
+
   // Step 2: Find waiting game (with cleanup)
   const waitingGames = await redis.smembers('popcorn_waiting_games')
   for (const gameId of waitingGames) {
     const game = await this.getGameState(gameId)
-    
+
     // Skip if expired or invalid
     if (!game || this.isGameExpired(game.createdAt)) {
       await this.cleanupGame(gameId)
       continue
     }
-    
+
     // Skip if self-matching
     if (game.player1Id === playerId) {
       await this.cleanupGame(gameId)
       continue
     }
-    
+
     // Try to join atomically
     if (game.status === 'waiting' && game.player2Id === null) {
       const success = await this.executeAtomicJoin(playerId, gameId)
@@ -523,7 +523,7 @@ async joinGame(playerId: string): Promise<JoinGameResult> {
       }
     }
   }
-  
+
   // Step 3: Create new game atomically
   const newGameId = this.generateGameId()
   await this.executeAtomicCreate(playerId, newGameId)
@@ -535,22 +535,22 @@ private async executeAtomicJoin(playerId: string, gameId: string): Promise<boole
   const multi = redis.multi()
   multi.watch(`popcorn_game:${gameId}`)
   multi.watch(`popcorn_player_game:${playerId}`)
-  
+
   // Verify game still waiting and player not in another game
   const game = await redis.hgetall(`popcorn_game:${gameId}`)
   const playerGame = await redis.get(`popcorn_player_game:${playerId}`)
-  
+
   if (game.status !== 'waiting' || game.player2Id !== null || playerGame) {
     multi.discard()
     return false
   }
-  
+
   // Execute atomic update
   multi.hset(`popcorn_game:${gameId}`, 'player2Id', playerId)
   multi.hset(`popcorn_game:${gameId}`, 'lastActivity2', Date.now())
   multi.set(`popcorn_player_game:${playerId}`, gameId, 'EX', 120)
   multi.srem('popcorn_waiting_games', gameId)
-  
+
   const result = await multi.exec()
   return result !== null
 }
@@ -562,29 +562,29 @@ private async executeAtomicJoin(playerId: string, gameId: string): Promise<boole
 async sendReady(gameId: string, playerId: string): Promise<ReadyResult> {
   const now = Date.now()
   const game = await this.getGameState(gameId)
-  
+
   if (!game || game.status !== 'waiting') {
     return { success: false, bothReady: false }
   }
-  
+
   // Check if ready timeout exceeded (30 seconds)
   const player1ReadyTime = game.player1Ready
   const player2ReadyTime = game.player2Ready
-  
+
   if (player1ReadyTime && now - player1ReadyTime > 30000) {
     // Timeout - reset to waiting
     await redis.hdel(`popcorn_game:${gameId}`, 'player1Ready', 'player2Ready')
     return { success: false, bothReady: false, timeout: true }
   }
-  
+
   // Set ready timestamp
   const readyField = game.player1Id === playerId ? 'player1Ready' : 'player2Ready'
   await redis.hset(`popcorn_game:${gameId}`, readyField, now)
-  
+
   // Check if both ready
   const updatedGame = await this.getGameState(gameId)
   const bothReady = updatedGame!.player1Ready !== null && updatedGame!.player2Ready !== null
-  
+
   if (bothReady) {
     // Transition to playing
     const startTime = Date.now()
@@ -592,7 +592,7 @@ async sendReady(gameId: string, playerId: string): Promise<ReadyResult> {
     await redis.hset(`popcorn_game:${gameId}`, 'startTime', startTime)
     return { success: true, bothReady: true, startTime }
   }
-  
+
   return { success: true, bothReady: false }
 }
 ```
@@ -602,42 +602,42 @@ async sendReady(gameId: string, playerId: string): Promise<ReadyResult> {
 ```typescript
 async checkPlayerActivity(gameId: string): Promise<DisconnectInfo> {
   const game = await this.getGameState(gameId)
-  
+
   if (!game || game.status !== 'playing') {
     return { disconnected: false }
   }
-  
+
   const now = Date.now()
   const DISCONNECT_THRESHOLD = 3000 // 3 seconds
-  
+
   const player1Disconnected = now - game.lastActivity1 > DISCONNECT_THRESHOLD
   const player2Disconnected = now - game.lastActivity2 > DISCONNECT_THRESHOLD
-  
+
   if (player1Disconnected || player2Disconnected) {
     return {
       disconnected: true,
       playerId: player1Disconnected ? game.player1Id : game.player2Id
     }
   }
-  
+
   return { disconnected: false }
 }
 
 // Called on every state poll
 async getGameState(gameId: string, playerId?: string): Promise<GameState | null> {
   const game = await redis.hgetall(`popcorn_game:${gameId}`)
-  
+
   if (!game) return null
-  
+
   // Update activity timestamp if playerId provided
   if (playerId) {
     const activityField = game.player1Id === playerId ? 'lastActivity1' : 'lastActivity2'
     await redis.hset(`popcorn_game:${gameId}`, activityField, Date.now())
   }
-  
+
   // Check for disconnects
   const disconnectInfo = await this.checkPlayerActivity(gameId)
-  
+
   return {
     ...game,
     disconnected: disconnectInfo.disconnected,
@@ -658,9 +658,9 @@ private updateTimer(): void {
     const elapsed = Math.floor((Date.now() - this.gameStartTime) / 1000)
     this.gameTime = Math.max(0, 60 - elapsed)
   }
-  
+
   this.timerText.setText(this.formatTime(this.gameTime))
-  
+
   if (this.gameTime <= 0) {
     this.endGame()
   }
@@ -677,13 +677,13 @@ shutdown(): void {
     clearInterval(this.pollInterval)
     this.pollInterval = null
   }
-  
+
   // Clear ready timeout
   if (this.readyTimeout) {
     clearTimeout(this.readyTimeout)
     this.readyTimeout = null
   }
-  
+
   // Leave game
   if (this.gameId) {
     fetch(`/api/multiplayer/leave?gameId=${this.gameId}`, { method: 'POST' })
@@ -698,13 +698,13 @@ shutdown(): void {
     clearInterval(this.pollInterval)
     this.pollInterval = null
   }
-  
+
   // Clear game timer
   if (this.gameTimer) {
     this.gameTimer.remove()
     this.gameTimer = null
   }
-  
+
   // Clear popcorn spawn timer
   if (this.popcornSpawnTimer) {
     this.popcornSpawnTimer.remove()

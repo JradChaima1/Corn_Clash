@@ -49,7 +49,7 @@ export type PopcornItem = {
 
 export type JoinGameResponse = {
   success: boolean;
-  gameState: GameState;
+  gameState: GameState | null;
   playerRole: PlayerRole;
   playerId: string;
   message?: string;
@@ -57,7 +57,7 @@ export type JoinGameResponse = {
 
 export type GameStateResponse = {
   success: boolean;
-  gameState: GameState;
+  gameState: GameState | null;
   playerRole: PlayerRole;
   disconnected?: boolean;
   disconnectedPlayerId?: string | null;
@@ -74,7 +74,7 @@ export type UpdatePositionRequest = {
 
 export type UpdatePositionResponse = {
   success: boolean;
-  gameState: GameState;
+  gameState: GameState | null;
 };
 
 export type ReadyResult = {

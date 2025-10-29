@@ -23,8 +23,6 @@ export class ModeSelect extends Scene {
     this.background.setDisplaySize(width, height);
     this.background.setAlpha(0.7);
 
-
-
     // Solo Mode Button
     this.soloButton = ButtonFactory.createButton(
       this,
@@ -36,7 +34,12 @@ export class ModeSelect extends Scene {
       260
     );
     this.soloButton.setInteractive(
-      new Phaser.Geom.Rectangle(-130, -35, 260, 70),
+      new Phaser.Geom.Rectangle(
+        -130,
+        -35,
+        260,
+        70
+      ) as unknown as Phaser.Types.Input.InputConfiguration,
       Phaser.Geom.Rectangle.Contains
     );
 
@@ -63,7 +66,12 @@ export class ModeSelect extends Scene {
       280
     );
     this.multiplayerButton.setInteractive(
-      new Phaser.Geom.Rectangle(-140, -35, 280, 70),
+      new Phaser.Geom.Rectangle(
+        -140,
+        -35,
+        280,
+        70
+      ) as unknown as Phaser.Types.Input.InputConfiguration,
       Phaser.Geom.Rectangle.Contains
     );
 
@@ -106,7 +114,12 @@ export class ModeSelect extends Scene {
       220
     );
     mainMenuButton.setInteractive(
-      new Phaser.Geom.Rectangle(-110, -30, 220, 60),
+      new Phaser.Geom.Rectangle(
+        -110,
+        -30,
+        220,
+        60
+      ) as unknown as Phaser.Types.Input.InputConfiguration,
       Phaser.Geom.Rectangle.Contains
     );
 

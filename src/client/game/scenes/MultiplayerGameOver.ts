@@ -86,7 +86,8 @@ export class MultiplayerGameOver extends Scene {
         .setOrigin(0.5);
     } else {
       // Normal game over - show winner
-      const winnerColor = data.winner === 'Player 1' ? '#FF6B6B' : data.winner === 'Player 2' ? '#4ECDC4' : '#FFD700';
+      const winnerColor =
+        data.winner === 'Player 1' ? '#FF6B6B' : data.winner === 'Player 2' ? '#4ECDC4' : '#FFD700';
 
       this.add
         .text(width / 2, height * 0.25, 'GAME OVER!', {
@@ -100,14 +101,19 @@ export class MultiplayerGameOver extends Scene {
         .setOrigin(0.5);
 
       this.add
-        .text(width / 2, height * 0.4, data.winner === 'Tie' ? "IT'S A TIE!" : `${data.winner.toUpperCase()} WINS!`, {
-          fontFamily: 'Arial Black',
-          fontSize: '42px',
-          color: winnerColor,
-          stroke: '#000000',
-          strokeThickness: 8,
-          align: 'center',
-        })
+        .text(
+          width / 2,
+          height * 0.4,
+          data.winner === 'Tie' ? "IT'S A TIE!" : `${data.winner.toUpperCase()} WINS!`,
+          {
+            fontFamily: 'Arial Black',
+            fontSize: '42px',
+            color: winnerColor,
+            stroke: '#000000',
+            strokeThickness: 8,
+            align: 'center',
+          }
+        )
         .setOrigin(0.5);
     }
 
@@ -145,8 +151,6 @@ export class MultiplayerGameOver extends Scene {
       })
       .setOrigin(0.5);
 
-
-
     // Main Menu button using ButtonFactory
     const mainMenuButton = ButtonFactory.createButton(
       this,
@@ -158,7 +162,12 @@ export class MultiplayerGameOver extends Scene {
       220
     );
     mainMenuButton.setInteractive(
-      new Phaser.Geom.Rectangle(-110, -30, 220, 60),
+      new Phaser.Geom.Rectangle(
+        -110,
+        -30,
+        220,
+        60
+      ) as unknown as Phaser.Types.Input.InputConfiguration,
       Phaser.Geom.Rectangle.Contains
     );
 

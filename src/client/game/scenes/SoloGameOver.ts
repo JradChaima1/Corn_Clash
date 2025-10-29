@@ -67,8 +67,6 @@ export class SoloGameOver extends Scene {
       .setOrigin(0.5)
       .setInteractive({ useHandCursor: true });
 
-
-
     // Button interactions
     this.restartText
       .on('pointerover', () => {
@@ -80,8 +78,6 @@ export class SoloGameOver extends Scene {
       .on('pointerdown', () => {
         this.scene.start('SoloGame');
       });
-
-
 
     // Blinking animation on restart text
     this.tweens.add({

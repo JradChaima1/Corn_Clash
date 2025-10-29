@@ -102,11 +102,13 @@ Shared types and utilities between client and server
 ## API Endpoints
 
 ### Core Endpoints
+
 - `GET /api/init`: Initialize app with post context
 - `POST /api/increment`: Increment counter (example)
 - `POST /api/decrement`: Decrement counter (example)
 
 ### Multiplayer Endpoints
+
 - `POST /api/multiplayer/join`: Join or create a multiplayer game
 - `POST /api/multiplayer/ready`: Signal player ready status
 - `GET /api/multiplayer/state`: Get current game state
@@ -116,6 +118,7 @@ Shared types and utilities between client and server
 - `POST /api/multiplayer/end`: End game session
 
 ### Internal Endpoints
+
 - `POST /internal/on-app-install`: Triggered on app installation
 - `POST /internal/menu/post-create`: Moderator menu action for post creation
 

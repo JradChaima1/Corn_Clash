@@ -1,4 +1,4 @@
-# Popcorn Catch - Complete Game Mechanics
+# CornClash - Complete Game Mechanics
 
 ## Assets Required
 
@@ -13,6 +13,7 @@ Place these images in `src/client/public/assets/`:
 ## Physics & Gameplay
 
 ### Popcorn Spawning
+
 - **Spawn Rate**: 1 piece every 0.8-1.2 seconds (randomized)
 - **Spawn Location**: Center of pot
 - **Launch Velocity**:
@@ -24,6 +25,7 @@ Place these images in `src/client/public/assets/`:
 - **Destruction**: Auto-remove when off-screen
 
 ### Collision Detection
+
 - **Detection Method**: Overlap between player and popcorn
 - **Collision Radius**: ~60 pixels
 - **On Catch**:
@@ -34,11 +36,13 @@ Place these images in `src/client/public/assets/`:
   - Flash effect displayed
 
 ### Scoring
+
 - **Points**: +1 per caught popcorn
 - **Display**: Real-time score updates
 - **Tracking**: Independent scores for each player
 
 ### Game Timer
+
 - **Duration**: 60 seconds
 - **Format**: MM:SS (e.g., "01:00", "00:45")
 - **Display**: Top center of screen
@@ -48,6 +52,7 @@ Place these images in `src/client/public/assets/`:
 ## Animations & Visual Effects
 
 ### Pot Animation
+
 - **Horizontal Wobble**: ±4 pixels, 80ms cycle
 - **Vertical Wobble**: ±2 pixels, 100ms cycle
 - **Rotation**: ±2 degrees, 120ms cycle
@@ -55,23 +60,27 @@ Place these images in `src/client/public/assets/`:
 - **Loop**: Continuous
 
 ### Popcorn Animation
+
 - **Rotation**: Continuous spin while airborne
 - **Physics**: Realistic arc trajectory
 - **Velocity**: Affected by gravity
 
 ### Player Idle Animation
+
 - **Vertical Bounce**: ±2 pixels
 - **Duration**: 800ms cycle
 - **Easing**: Sine.easeInOut
 - **Loop**: Continuous
 
 ### Catch Animation
+
 - **Scale**: Grows to 110% (0.55 scale)
 - **Duration**: 100ms
 - **Yoyo**: Returns to normal size
 - **Easing**: Back.easeOut
 
 ### Particle Effects
+
 - **Trigger**: On successful catch
 - **Count**: 8 particles
 - **Speed**: 50-150 pixels/sec
@@ -80,6 +89,7 @@ Place these images in `src/client/public/assets/`:
 - **Gravity**: 200 pixels/sec²
 
 ### Flash Effect
+
 - **Shape**: Circle, 20px radius
 - **Color**: Yellow (#FFFF00)
 - **Alpha**: 0.6 → 0
@@ -87,6 +97,7 @@ Place these images in `src/client/public/assets/`:
 - **Duration**: 200ms
 
 ### Screen Shake
+
 - **Trigger**: Each popcorn launch
 - **Duration**: 50ms
 - **Intensity**: 0.002 (1-2 pixels)
@@ -94,6 +105,7 @@ Place these images in `src/client/public/assets/`:
 ## Game Modes
 
 ### Solo Mode
+
 - **Players**: 1
 - **Objective**: Beat your high score
 - **Controls**: A/D or Arrow Keys
@@ -101,16 +113,18 @@ Place these images in `src/client/public/assets/`:
 - **Character**: Single popcorn cup
 
 ### Multiplayer Mode (Online)
+
 - **Players**: 2 (different devices)
 - **Objective**: Outscore opponent
 - **Controls**: A/D or Arrow Keys (each player)
-- **Movement**: 
+- **Movement**:
   - Player 1: Left half of screen
   - Player 2: Right half of screen
 - **Characters**: Two popcorn cups (color-coded)
 - **Sync**: Real-time via server (100ms polling)
 
 ### Local 2-Player Mode
+
 - **Players**: 2 (same device)
 - **Objective**: Outscore opponent
 - **Controls**:
@@ -122,6 +136,7 @@ Place these images in `src/client/public/assets/`:
 ## Technical Implementation
 
 ### Client-Side (Phaser.js)
+
 - **Physics**: Arcade physics with gravity
 - **Rendering**: WebGL/Canvas
 - **Input**: Keyboard controls
@@ -129,6 +144,7 @@ Place these images in `src/client/public/assets/`:
 - **Particles**: Built-in particle system
 
 ### Server-Side (Multiplayer)
+
 - **Game Loop**: 1-second tick rate
 - **Physics**: Server-authoritative
 - **State Sync**: 100ms client polling

@@ -96,14 +96,15 @@ export class MultiplayerGame extends Scene {
     this.counter.setDisplaySize(width, 100);
 
     // Cooking pot on top of counter
-    this.pot = this.physics.add.image(width / 2, height - 120, 'pot'); this.pot.setDisplaySize(300, 300); const potBody = this.pot.body as Phaser.Physics.Arcade.Body; potBody.setImmovable(true);
+    this.pot = this.physics.add.image(width / 2, height - 120, 'pot');
+    this.pot.setDisplaySize(300, 300);
+    const potBody = this.pot.body as Phaser.Physics.Arcade.Body;
+    potBody.setImmovable(true);
     // So it blocks other objects
     potBody.setAllowGravity(false);
     // So it doesn't fall
     potBody.setSize(this.pot.width * 0.9, this.pot.height * 0.6);
     potBody.setOffset(this.pot.width * 0.05, this.pot.height * 0.4);
-
-
 
     this.tweens.add({
       targets: this.pot,
@@ -122,7 +123,6 @@ export class MultiplayerGame extends Scene {
       repeat: -1,
       ease: 'Sine.easeInOut',
     });
-
 
     // Player 1 (left side)
     this.player1 = this.add.image(150, height - 120, 'cup');
@@ -260,10 +260,8 @@ export class MultiplayerGame extends Scene {
       this
     );
 
-
-
     // Don't start game yet - wait for both players
-    this.waitForBothPlayers();
+    void this.waitForBothPlayers();
   }
 
   private gameStartTime: number = 0;
@@ -456,7 +454,11 @@ export class MultiplayerGame extends Scene {
     const spawnX = spawnFromLeft ? 50 : width - 50;
     const spawnY = 100; // Top of screen
 
-    const popcorn = this.popcornGroup.get(spawnX, spawnY, 'popcorn') as Phaser.Physics.Arcade.Sprite;
+    const popcorn = this.popcornGroup.get(
+      spawnX,
+      spawnY,
+      'popcorn'
+    ) as Phaser.Physics.Arcade.Sprite;
 
     if (popcorn) {
       popcorn.setActive(true);
@@ -511,7 +513,11 @@ export class MultiplayerGame extends Scene {
     for (let i = 0; i < spawnCount; i++) {
       // Slight delay between spawns for visual effect
       this.time.delayedCall(i * 50, () => {
-        const popcorn = this.popcornGroup.get(potX, potY, 'popcorn') as Phaser.Physics.Arcade.Sprite;
+        const popcorn = this.popcornGroup.get(
+          potX,
+          potY,
+          'popcorn'
+        ) as Phaser.Physics.Arcade.Sprite;
 
         if (popcorn) {
           popcorn.setActive(true);
@@ -612,14 +618,18 @@ export class MultiplayerGame extends Scene {
       // Prevent negative scores
       if (this.player1Score < 0) this.player1Score = 0;
       this.player1ScoreText.setText(`P1: ${this.player1Score}`);
-      console.log(`[MultiplayerGame] P1 caught ${popcornType} popcorn (${popcornValue > 0 ? '+' : ''}${popcornValue}), score now: ${this.player1Score}`);
+      console.log(
+        `[MultiplayerGame] P1 caught ${popcornType} popcorn (${popcornValue > 0 ? '+' : ''}${popcornValue}), score now: ${this.player1Score}`
+      );
       void this.sendScore(this.player1Score);
     } else {
       this.player2Score += popcornValue;
       // Prevent negative scores
       if (this.player2Score < 0) this.player2Score = 0;
       this.player2ScoreText.setText(`P2: ${this.player2Score}`);
-      console.log(`[MultiplayerGame] P2 caught ${popcornType} popcorn (${popcornValue > 0 ? '+' : ''}${popcornValue}), score now: ${this.player2Score}`);
+      console.log(
+        `[MultiplayerGame] P2 caught ${popcornType} popcorn (${popcornValue > 0 ? '+' : ''}${popcornValue}), score now: ${this.player2Score}`
+      );
       void this.sendScore(this.player2Score);
     }
 
@@ -636,13 +646,18 @@ export class MultiplayerGame extends Scene {
     // Show score popup for special popcorn
     if (popcornType !== 'normal') {
       const scorePopup = this.add
-        .text(popcornSprite.x, popcornSprite.y, popcornValue > 0 ? `+${popcornValue}` : `${popcornValue}`, {
-          fontFamily: 'Arial Black',
-          fontSize: '32px',
-          color: popcornType === 'red' ? '#ff0000' : '#0088ff',
-          stroke: '#000000',
-          strokeThickness: 4,
-        })
+        .text(
+          popcornSprite.x,
+          popcornSprite.y,
+          popcornValue > 0 ? `+${popcornValue}` : `${popcornValue}`,
+          {
+            fontFamily: 'Arial Black',
+            fontSize: '32px',
+            color: popcornType === 'red' ? '#ff0000' : '#0088ff',
+            stroke: '#000000',
+            strokeThickness: 4,
+          }
+        )
         .setOrigin(0.5);
 
       this.tweens.add({
@@ -729,8 +744,60 @@ export class MultiplayerGame extends Scene {
       loop: true,
     });
 
-    // Use current local scores (already synced during gameplay)
-    console.log(`[MultiplayerGame] Using current scores: P1=${this.player1Score}, P2=${this.player2Score}`);
+    // CRITICAL: Fetch final authoritative scores from server before showing game over
+    // Wait a bit to ensure all score updates have reached the server
+    await new Promise<void>((resolve) => setTimeout(resolve, 500));
+
+    try {
+      console.log('[MultiplayerGame] Fetching final authoritative scores from server...');
+      const response = await fetch(`/api/multiplayer/state?gameId=${this.gameId}`);
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.gameState) {
+          // Use server's authoritative scores
+          const finalP1Score = data.gameState.player1Score;
+          const finalP2Score = data.gameState.player2Score;
+
+          console.log(
+            `[MultiplayerGame] Server authoritative scores: P1=${finalP1Score}, P2=${finalP2Score}`
+          );
+          console.log(
+            `[MultiplayerGame] Local scores were: P1=${this.player1Score}, P2=${this.player2Score}`
+          );
+
+          const winner =
+            finalP1Score > finalP2Score
+              ? 'Player 1'
+              : finalP2Score > finalP1Score
+                ? 'Player 2'
+                : 'Tie';
+
+          console.log(`[MultiplayerGame] Winner: ${winner}, starting GameOver scene`);
+
+          // Stop loading animation
+          if (dotAnimation) {
+            dotAnimation.remove();
+          }
+
+          this.scene.start('MultiplayerGameOver', {
+            winner,
+            player1Score: finalP1Score,
+            player2Score: finalP2Score,
+            gameId: this.gameId,
+            reason: 'completed',
+          });
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('[MultiplayerGame] Failed to fetch final scores from server:', error);
+    }
+
+    // Fallback: Use local scores if server fetch fails
+    console.log(
+      `[MultiplayerGame] Using local scores as fallback: P1=${this.player1Score}, P2=${this.player2Score}`
+    );
 
     const winner =
       this.player1Score > this.player2Score
@@ -740,11 +807,6 @@ export class MultiplayerGame extends Scene {
           : 'Tie';
 
     console.log(`[MultiplayerGame] Winner: ${winner}, starting GameOver scene`);
-
-    // DON'T clean up game immediately - let it expire naturally
-    // This ensures both players can fetch final scores
-    // The game will be cleaned up by TTL (2 minutes) or when players leave
-    console.log(`[MultiplayerGame] Leaving game cleanup to TTL or player leave`)
 
     // Stop loading animation
     if (dotAnimation) {
@@ -794,10 +856,15 @@ export class MultiplayerGame extends Scene {
       const response = await fetch(`/api/multiplayer/state?gameId=${this.gameId}`);
       if (!response.ok) {
         this.consecutiveFailedFetches++;
-        // If opponent disconnected (3 failed fetches = ~0.5 seconds)
-        if (this.consecutiveFailedFetches >= 3 && this.isGameActive) {
-          console.log('[MultiplayerGame] Opponent disconnected, showing message...');
-          this.handleDisconnect();
+        // Increased threshold: 10 failed fetches = ~1.66 seconds to reduce false positives
+        // Only trigger on 404 (game not found) or after sustained failures
+        if (this.consecutiveFailedFetches >= 10 && this.isGameActive) {
+          console.log('[MultiplayerGame] Sustained connection failure, checking disconnect...');
+          // Only disconnect if we get 404 (game deleted) or 500 errors
+          if (response.status === 404) {
+            console.log('[MultiplayerGame] Game not found (404), opponent likely disconnected');
+            this.handleDisconnect();
+          }
         }
         return;
       }
@@ -854,26 +921,23 @@ export class MultiplayerGame extends Scene {
           ease: 'Linear',
         });
 
-        // Update opponent's score from server (always trust server for opponent)
-        if (this.playerRole === 'player1') {
-          // I'm player 1, update player 2's score from server
-          if (data.gameState.player2Score !== this.player2Score) {
-            this.player2Score = data.gameState.player2Score;
-            this.player2ScoreText.setText(`P2: ${this.player2Score}`);
-          }
-        } else {
-          // I'm player 2, update player 1's score from server
-          if (data.gameState.player1Score !== this.player1Score) {
-            this.player1Score = data.gameState.player1Score;
-            this.player1ScoreText.setText(`P1: ${this.player1Score}`);
-          }
+        // CRITICAL: Always sync BOTH scores from server (server is authoritative)
+        // This ensures both players see the same scores at all times
+        if (data.gameState.player1Score !== this.player1Score) {
+          this.player1Score = data.gameState.player1Score;
+          this.player1ScoreText.setText(`P1: ${this.player1Score}`);
+        }
+        if (data.gameState.player2Score !== this.player2Score) {
+          this.player2Score = data.gameState.player2Score;
+          this.player2ScoreText.setText(`P2: ${this.player2Score}`);
         }
       }
     } catch (error) {
       this.consecutiveFailedFetches++;
-      // If opponent disconnected (3 failed fetches = ~0.5 seconds)
-      if (this.consecutiveFailedFetches >= 3 && this.isGameActive) {
-        console.log('[MultiplayerGame] Opponent disconnected (error), showing message...');
+      // Increased threshold to reduce false positives from network hiccups
+      // 10 failed fetches = ~1.66 seconds of sustained failure
+      if (this.consecutiveFailedFetches >= 10 && this.isGameActive) {
+        console.log('[MultiplayerGame] Sustained network error, assuming disconnect...');
         this.handleDisconnect();
       }
     }

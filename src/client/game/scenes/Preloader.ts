@@ -48,7 +48,7 @@ export class Preloader extends Scene {
         duration: 1000, // Half of 2000ms for one direction
         yoyo: true, // Return to original values
         repeat: -1, // Repeat infinitely
-        ease: 'Sine.easeInOut'
+        ease: 'Sine.easeInOut',
       });
     } else {
       //  Display fallback text if icon failed to load
@@ -56,7 +56,7 @@ export class Preloader extends Scene {
         fontFamily: 'Arial',
         fontSize: '48px',
         color: '#FFFFFF',
-        align: 'center'
+        align: 'center',
       });
       fallbackText.setOrigin(0.5, 0.5);
 
@@ -67,7 +67,7 @@ export class Preloader extends Scene {
         duration: 1000,
         yoyo: true,
         repeat: -1,
-        ease: 'Sine.easeInOut'
+        ease: 'Sine.easeInOut',
       });
     }
 
@@ -89,13 +89,13 @@ export class Preloader extends Scene {
     progressBarBg.destroy();
 
     //  Create glow layer 2 (outermost, +8px padding, alpha 0.3)
-    const glowLayer2 = this.add.rectangle(202, 380, 4, 32, 0x00FFFF); // height: 16 + 8*2 = 32
+    const glowLayer2 = this.add.rectangle(202, 380, 4, 32, 0x00ffff); // height: 16 + 8*2 = 32
     glowLayer2.setOrigin(0, 0.5);
     glowLayer2.setAlpha(0.3);
     glowLayer2.setDepth(-2); // Behind everything
 
     //  Create glow layer 1 (middle, +4px padding, alpha 0.6)
-    const glowLayer1 = this.add.rectangle(202, 380, 4, 24, 0x00FFFF); // height: 16 + 4*2 = 24
+    const glowLayer1 = this.add.rectangle(202, 380, 4, 24, 0x00ffff); // height: 16 + 4*2 = 24
     glowLayer1.setOrigin(0, 0.5);
     glowLayer1.setAlpha(0.6);
     glowLayer1.setDepth(-1); // Behind the main fill bar
@@ -107,13 +107,13 @@ export class Preloader extends Scene {
 
     //  Function to interpolate between two colors
     const interpolateColor = (color1: number, color2: number, factor: number): number => {
-      const r1 = (color1 >> 16) & 0xFF;
-      const g1 = (color1 >> 8) & 0xFF;
-      const b1 = color1 & 0xFF;
+      const r1 = (color1 >> 16) & 0xff;
+      const g1 = (color1 >> 8) & 0xff;
+      const b1 = color1 & 0xff;
 
-      const r2 = (color2 >> 16) & 0xFF;
-      const g2 = (color2 >> 8) & 0xFF;
-      const b2 = color2 & 0xFF;
+      const r2 = (color2 >> 16) & 0xff;
+      const g2 = (color2 >> 8) & 0xff;
+      const b2 = color2 & 0xff;
 
       const r = Math.round(r1 + (r2 - r1) * factor);
       const g = Math.round(g1 + (g2 - g1) * factor);
@@ -129,8 +129,8 @@ export class Preloader extends Scene {
       if (width > 0) {
         const segments = 20; // Number of segments for smooth gradient
         const segmentWidth = width / segments;
-        const cyan = 0x00FFFF;
-        const blue = 0x0080FF;
+        const cyan = 0x00ffff;
+        const blue = 0x0080ff;
 
         for (let i = 0; i < segments; i++) {
           const factor = i / (segments - 1);
@@ -169,7 +169,7 @@ export class Preloader extends Scene {
 
     // Load game images with correct filenames
     this.load.image('kitchen', 'kitchen_background.png');
-    this.load.image('mainmenubg', 'mybgimage.png')
+    this.load.image('mainmenubg', 'mybgimage.png');
     this.load.image('pot', 'large_pot.png');
     this.load.image('popcorn', 'single_corn.png');
     this.load.image('cup', 'empty_popcorn_cup.png');
@@ -180,7 +180,7 @@ export class Preloader extends Scene {
     this.load.audio('game_music', 'gameplaysong.mp3');
 
     // Handle loading errors gracefully
-    this.load.on('loaderror', (file: any) => {
+    this.load.on('loaderror', (file: Phaser.Loader.File) => {
       console.error(`Failed to load asset: ${file.key} from ${file.url}`);
       // Continue loading other assets even if one fails
     });

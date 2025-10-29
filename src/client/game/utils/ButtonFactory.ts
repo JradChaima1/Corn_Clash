@@ -119,11 +119,7 @@ export class ButtonFactory {
    * @param button - The button container
    * @param callback - Function to call after click animation
    */
-  static addClickEffect(
-    scene: Scene,
-    button: GameObjects.Container,
-    callback: () => void
-  ): void {
+  static addClickEffect(scene: Scene, button: GameObjects.Container, callback: () => void): void {
     button.on('pointerdown', () => {
       scene.tweens.add({
         targets: button,

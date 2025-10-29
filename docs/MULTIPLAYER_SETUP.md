@@ -33,12 +33,14 @@
 ## How It Works
 
 ### Solo Mode
+
 1. Player selects "Solo Mode"
 2. Game starts immediately
 3. Player catches popcorn for 60 seconds
 4. Final score is displayed
 
 ### Multiplayer Mode
+
 1. Player selects "Multiplayer"
 2. Joins matchmaking queue
 3. Waits for opponent (or creates new game)
@@ -54,12 +56,14 @@
 ## Testing
 
 ### Test Solo Mode
+
 1. Run `npm run dev`
 2. Open the playtest URL
 3. Click through to "Solo Mode"
 4. Play the game
 
 ### Test Multiplayer Mode
+
 1. Run `npm run dev`
 2. Open the playtest URL in two different browser windows/tabs
 3. Both select "Multiplayer"

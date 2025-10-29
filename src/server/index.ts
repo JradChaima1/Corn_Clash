@@ -131,47 +131,52 @@ router.post('/internal/menu/post-create', async (_req, res): Promise<void> => {
 });
 
 // Multiplayer endpoints
-router.post<unknown, JoinGameResponse>('/api/multiplayer/join', async (_req, res): Promise<void> => {
-  try {
-    console.log('[API] /api/multiplayer/join called');
-    const { userId } = context;
-    
-    if (!userId) {
-      console.error('[API] No userId in context');
-      res.status(401).json({
-        success: false,
-        gameState: null as any,
-        playerRole: 'spectator',
-        playerId: '',
-        message: 'Authentication required',
+router.post<unknown, JoinGameResponse>(
+  '/api/multiplayer/join',
+  async (_req, res): Promise<void> => {
+    try {
+      console.log('[API] /api/multiplayer/join called');
+      const { userId } = context;
+
+      if (!userId) {
+        console.error('[API] No userId in context');
+        res.status(401).json({
+          success: false,
+          gameState: null,
+          playerRole: 'spectator' as const,
+          playerId: '',
+          message: 'Authentication required',
+        });
+        return;
+      }
+
+      const playerId = userId;
+      console.log(`[API] Player ID: ${playerId}`);
+
+      const result = await gameManager.joinGame(playerId);
+
+      console.log(
+        `[API] Join result: role=${result.playerRole}, status=${result.gameState.status}`
+      );
+
+      res.json({
+        success: true,
+        gameState: result.gameState,
+        playerRole: result.playerRole as 'player1' | 'player2' | 'spectator',
+        playerId,
       });
-      return;
+    } catch (error) {
+      console.error('[API] Error joining game:', error);
+      res.status(500).json({
+        success: false,
+        gameState: null,
+        playerRole: 'spectator' as const,
+        playerId: '',
+        message: error instanceof Error ? error.message : 'Failed to join game',
+      });
     }
-
-    const playerId = userId;
-    console.log(`[API] Player ID: ${playerId}`);
-
-    const result = await gameManager.joinGame(playerId);
-
-    console.log(`[API] Join result: role=${result.playerRole}, status=${result.gameState.status}`);
-
-    res.json({
-      success: true,
-      gameState: result.gameState,
-      playerRole: result.playerRole as 'player1' | 'player2' | 'spectator',
-      playerId,
-    });
-  } catch (error) {
-    console.error('[API] Error joining game:', error);
-    res.status(500).json({
-      success: false,
-      gameState: null as any,
-      playerRole: 'spectator',
-      playerId: '',
-      message: error instanceof Error ? error.message : 'Failed to join game',
-    });
   }
-});
+);
 
 router.post<unknown, ReadyResult>('/api/multiplayer/ready', async (req, res): Promise<void> => {
   try {
@@ -203,7 +208,9 @@ router.post<unknown, ReadyResult>('/api/multiplayer/ready', async (req, res): Pr
 
     const result = await gameManager.sendReady(gameId, playerId);
 
-    console.log(`[API] Ready result: success=${result.success}, bothReady=${result.bothReady}, startTime=${result.startTime}`);
+    console.log(
+      `[API] Ready result: success=${result.success}, bothReady=${result.bothReady}, startTime=${result.startTime}`
+    );
 
     res.json(result);
   } catch (error) {
@@ -216,71 +223,76 @@ router.post<unknown, ReadyResult>('/api/multiplayer/ready', async (req, res): Pr
   }
 });
 
-router.get<unknown, GameStateResponse>('/api/multiplayer/state', async (req, res): Promise<void> => {
-  try {
-    const gameId = req.query.gameId as string;
-    const { userId } = context;
-    const playerId = userId || '';
+router.get<unknown, GameStateResponse>(
+  '/api/multiplayer/state',
+  async (req, res): Promise<void> => {
+    try {
+      const gameId = req.query.gameId as string;
+      const { userId } = context;
+      const playerId = userId || '';
 
-    if (!gameId) {
-      console.error('[API] No gameId provided in state request');
-      res.status(400).json({
+      if (!gameId) {
+        console.error('[API] No gameId provided in state request');
+        res.status(400).json({
+          success: false,
+          gameState: null,
+          playerRole: 'spectator' as const,
+        });
+        return;
+      }
+
+      // Update activity timestamp for this player
+      const gameState = await gameManager.getGameState(gameId, playerId);
+
+      if (!gameState) {
+        console.error(`[API] Game ${gameId} not found`);
+        res.status(404).json({
+          success: false,
+          gameState: null,
+          playerRole: 'spectator' as const,
+        });
+        return;
+      }
+
+      let playerRole: 'player1' | 'player2' | 'spectator' = 'spectator';
+
+      if (gameState.player1Id === playerId) {
+        playerRole = 'player1';
+      } else if (gameState.player2Id === playerId) {
+        playerRole = 'player2';
+      }
+
+      // Check for disconnected players
+      const disconnectInfo = await gameManager.checkPlayerActivity(gameId);
+
+      // If a player is disconnected, trigger automatic cleanup
+      if (disconnectInfo.disconnected && disconnectInfo.playerId) {
+        console.log(
+          `[API] Player ${disconnectInfo.playerId} disconnected from game ${gameId}, triggering cleanup`
+        );
+        // Clean up the game asynchronously (don't wait for it)
+        gameManager.endGame(gameId).catch((err) => {
+          console.error(`[API] Error cleaning up game ${gameId} after disconnect:`, err);
+        });
+      }
+
+      res.json({
+        success: true,
+        gameState,
+        playerRole,
+        disconnected: disconnectInfo.disconnected,
+        disconnectedPlayerId: disconnectInfo.playerId || null,
+      });
+    } catch (error) {
+      console.error('Error getting game state:', error);
+      res.status(500).json({
         success: false,
-        gameState: null as any,
-        playerRole: 'spectator',
-      });
-      return;
-    }
-
-    // Update activity timestamp for this player
-    const gameState = await gameManager.getGameState(gameId, playerId);
-
-    if (!gameState) {
-      console.error(`[API] Game ${gameId} not found`);
-      res.status(404).json({
-        success: false,
-        gameState: null as any,
-        playerRole: 'spectator',
-      });
-      return;
-    }
-
-    let playerRole: 'player1' | 'player2' | 'spectator' = 'spectator';
-
-    if (gameState.player1Id === playerId) {
-      playerRole = 'player1';
-    } else if (gameState.player2Id === playerId) {
-      playerRole = 'player2';
-    }
-
-    // Check for disconnected players
-    const disconnectInfo = await gameManager.checkPlayerActivity(gameId);
-
-    // If a player is disconnected, trigger automatic cleanup
-    if (disconnectInfo.disconnected && disconnectInfo.playerId) {
-      console.log(`[API] Player ${disconnectInfo.playerId} disconnected from game ${gameId}, triggering cleanup`);
-      // Clean up the game asynchronously (don't wait for it)
-      gameManager.endGame(gameId).catch(err => {
-        console.error(`[API] Error cleaning up game ${gameId} after disconnect:`, err);
+        gameState: null,
+        playerRole: 'spectator' as const,
       });
     }
-
-    res.json({
-      success: true,
-      gameState,
-      playerRole,
-      disconnected: disconnectInfo.disconnected,
-      disconnectedPlayerId: disconnectInfo.playerId || null,
-    });
-  } catch (error) {
-    console.error('Error getting game state:', error);
-    res.status(500).json({
-      success: false,
-      gameState: null as any,
-      playerRole: 'spectator',
-    });
   }
-});
+);
 
 router.post<unknown, UpdatePositionResponse, UpdatePositionRequest>(
   '/api/multiplayer/position',
@@ -294,7 +306,7 @@ router.post<unknown, UpdatePositionResponse, UpdatePositionRequest>(
       if (!gameId || position === undefined) {
         res.status(400).json({
           success: false,
-          gameState: null as any,
+          gameState: null,
         });
         return;
       }
@@ -306,7 +318,7 @@ router.post<unknown, UpdatePositionResponse, UpdatePositionRequest>(
       if (!success || !gameState) {
         res.status(404).json({
           success: false,
-          gameState: null as any,
+          gameState: null,
         });
         return;
       }
@@ -319,7 +331,7 @@ router.post<unknown, UpdatePositionResponse, UpdatePositionRequest>(
       console.error('Error updating position:', error);
       res.status(500).json({
         success: false,
-        gameState: null as any,
+        gameState: null,
       });
     }
   }
@@ -340,10 +352,10 @@ router.post<unknown, { success: boolean }, { score: number }>(
       }
 
       const success = await gameManager.updateScore(gameId, playerId, score);
-      
+
       // Update activity timestamp
       await gameManager.getGameState(gameId, playerId);
-      
+
       res.json({ success });
     } catch (error) {
       console.error('Error updating score:', error);

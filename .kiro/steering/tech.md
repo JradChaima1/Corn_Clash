@@ -74,12 +74,14 @@ npm run prettier
 ## Dependencies
 
 ### Runtime
+
 - `@devvit/web`: Devvit web framework
 - `phaser`: Game engine
 - `express`: HTTP server
 - `devvit`: Devvit CLI and SDK
 
 ### Development
+
 - `typescript`: Type checking
 - `eslint` + `@eslint/js` + `typescript-eslint`: Linting
 - `prettier` + `prettier-package-json`: Code formatting

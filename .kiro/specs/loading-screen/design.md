@@ -33,6 +33,7 @@ Preloader Scene
 **File:** `src/client/game/scenes/Preloader.ts`
 
 **Responsibilities:**
+
 - Render black background
 - Display centered icon with glow effect
 - Create and animate progress bar
@@ -46,6 +47,7 @@ Preloader Scene
 - `create()`: Transition to MainMenu scene
 
 **Properties:**
+
 - `loadingIcon`: GameObjects.Image - The centered icon
 - `progressBar`: GameObjects.Rectangle - The fill bar
 - `progressBarBg`: GameObjects.Rectangle - The outline/background
@@ -105,11 +107,13 @@ No persistent data models are required for this feature. All visual elements are
 **Implementation:** Phaser PostFX pipeline or multiple layered images with alpha blending
 
 **Approach 1 - PostFX (Preferred):**
+
 ```typescript
 this.loadingIcon.setPostPipeline('Glow');
 ```
 
 **Approach 2 - Layered Images:**
+
 - Base icon image
 - Duplicate icon with tint and alpha (0.3-0.5)
 - Scale duplicate slightly larger (1.1x)
@@ -120,6 +124,7 @@ this.loadingIcon.setPostPipeline('Glow');
 **Implementation:** Multiple rectangle layers with decreasing alpha and increasing size
 
 **Layers:**
+
 1. Inner fill bar (solid color)
 2. Glow layer 1 (alpha 0.6, +4px padding)
 3. Glow layer 2 (alpha 0.3, +8px padding)
@@ -130,12 +135,14 @@ this.loadingIcon.setPostPipeline('Glow');
 ### Animations
 
 #### Icon Pulse Animation
+
 - **Duration:** 2000ms
 - **Effect:** Subtle scale (1.0 → 1.05 → 1.0) and alpha (1.0 → 0.8 → 1.0)
 - **Repeat:** Infinite loop
 - **Easing:** Sine.easeInOut
 
 #### Progress Bar Fill
+
 - **Duration:** Instant update on progress event
 - **Effect:** Width increases from left to right
 - **Smoothing:** Tween with 100ms duration for smooth transitions
@@ -147,12 +154,14 @@ this.loadingIcon.setPostPipeline('Glow');
 **Scenario:** Icon image fails to load in Boot scene
 
 **Handling:**
+
 - Display text fallback: "LOADING..."
 - Continue with progress bar display
 - Log error to console
 - Proceed to MainMenu after timeout (5 seconds)
 
 **Implementation:**
+
 ```typescript
 this.load.on('loaderror', (file) => {
   console.error(`Failed to load: ${file.key}`);
@@ -165,6 +174,7 @@ this.load.on('loaderror', (file) => {
 **Scenario:** Preloader scene fails to transition to MainMenu
 
 **Handling:**
+
 - Force transition after 10-second timeout
 - Log warning to console
 
@@ -175,6 +185,7 @@ this.load.on('loaderror', (file) => {
 ### Visual Testing
 
 **Manual Testing Checklist:**
+
 1. Verify black background covers entire canvas
 2. Confirm icon is centered and visible
 3. Check glow effect is applied to icon
@@ -187,11 +198,13 @@ this.load.on('loaderror', (file) => {
 ### Performance Testing
 
 **Metrics to Monitor:**
+
 - Loading time should not increase significantly (< 100ms overhead)
 - Animation frame rate should maintain 60 FPS
 - Memory usage should remain stable
 
 **Testing Approach:**
+
 - Use browser DevTools Performance tab
 - Monitor FPS during loading screen display
 - Check for memory leaks after multiple scene transitions
@@ -199,12 +212,14 @@ this.load.on('loaderror', (file) => {
 ### Cross-Browser Testing
 
 **Target Browsers:**
+
 - Chrome (latest)
 - Firefox (latest)
 - Safari (latest)
 - Mobile browsers (iOS Safari, Chrome Mobile)
 
 **Test Cases:**
+
 - Verify visual effects render correctly
 - Check animation smoothness
 - Confirm responsive scaling works
@@ -212,10 +227,12 @@ this.load.on('loaderror', (file) => {
 ### Edge Cases
 
 1. **Very Fast Loading:** Assets load in < 500ms
+
    - Expected: Loading screen still displays briefly
    - Minimum display time: 500ms
 
 2. **Very Slow Loading:** Assets take > 10 seconds
+
    - Expected: Progress bar continues to update
    - Timeout: Force transition after 30 seconds
 
@@ -243,7 +260,6 @@ This design is compatible with Phaser 3.x (current project version). All feature
 - Limit number of glow layers to 2-3 for optimal performance
 - Use hardware-accelerated CSS transforms where possible
 
-
 ## Design Decisions and Rationales
 
 ### Decision 1: Enhance Existing Preloader vs. New Scene
@@ -251,6 +267,7 @@ This design is compatible with Phaser 3.x (current project version). All feature
 **Choice:** Enhance existing Preloader scene
 
 **Rationale:**
+
 - Preloader scene already handles asset loading
 - Avoids adding complexity to scene flow
 - Maintains existing Boot → Preloader → MainMenu pattern
@@ -261,6 +278,7 @@ This design is compatible with Phaser 3.x (current project version). All feature
 **Choice:** Use layered images with alpha blending (fallback to PostFX if needed)
 
 **Rationale:**
+
 - Layered approach is more compatible across devices
 - PostFX may not be supported on all mobile browsers
 - Provides consistent visual result
@@ -271,6 +289,7 @@ This design is compatible with Phaser 3.x (current project version). All feature
 **Choice:** Horizontal bar with neon glow and gradient fill
 
 **Rationale:**
+
 - Horizontal bars are universally understood
 - Neon aesthetic matches modern game design trends
 - Gradient adds visual interest without complexity
@@ -281,6 +300,7 @@ This design is compatible with Phaser 3.x (current project version). All feature
 **Choice:** Pure black (#000000) background
 
 **Rationale:**
+
 - Makes glow effects more prominent
 - Creates high contrast with bright elements
 - Common in modern loading screens
@@ -291,6 +311,7 @@ This design is compatible with Phaser 3.x (current project version). All feature
 **Choice:** No loading percentage text, only visual progress bar
 
 **Rationale:**
+
 - Cleaner, more modern aesthetic
 - Progress bar provides sufficient feedback
 - Reduces visual clutter

@@ -62,7 +62,12 @@ export class MainMenu extends Scene {
       200
     );
     this.playButton.setInteractive(
-      new Phaser.Geom.Rectangle(-100, -30, 200, 60),
+      new Phaser.Geom.Rectangle(
+        -100,
+        -30,
+        200,
+        60
+      ) as unknown as Phaser.Types.Input.InputConfiguration,
       Phaser.Geom.Rectangle.Contains
     );
 
@@ -77,7 +82,12 @@ export class MainMenu extends Scene {
       240
     );
     this.howToPlayButton.setInteractive(
-      new Phaser.Geom.Rectangle(-120, -30, 240, 60),
+      new Phaser.Geom.Rectangle(
+        -120,
+        -30,
+        240,
+        60
+      ) as unknown as Phaser.Types.Input.InputConfiguration,
       Phaser.Geom.Rectangle.Contains
     );
 

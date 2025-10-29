@@ -1,13 +1,15 @@
-# Popcorn Catch Game
+# CornClash Game
 
 A popcorn catching game with both solo and online multiplayer modes, built with Phaser.js for Reddit's Devvit platform.
 
 ## Game Modes
 
 ### Solo Mode
+
 Play alone and try to beat your high score! Catch as much popcorn as you can in 60 seconds.
 
 ### Multiplayer Mode
+
 Compete against another player online in real-time. The player who catches the most popcorn wins!
 
 ## Game Setup
@@ -19,10 +21,12 @@ Compete against another player online in real-time. The player who catches the m
 ## Controls
 
 ### Solo Mode
+
 - `A` or `←` (Left Arrow) - Move left
 - `D` or `→` (Right Arrow) - Move right
 
 ### Multiplayer Mode
+
 - Each player uses their own device
 - `A` or `←` (Left Arrow) - Move left
 - `D` or `→` (Right Arrow) - Move right
@@ -33,7 +37,7 @@ Compete against another player online in real-time. The player who catches the m
 1. **Main Menu**: Click to start
 2. **Mode Selection**: Choose Solo or Multiplayer
 3. **Solo Mode**: Start playing immediately
-4. **Multiplayer Mode**: 
+4. **Multiplayer Mode**:
    - Join matchmaking lobby
    - Wait for opponent
    - Game starts when 2 players are ready
@@ -59,11 +63,13 @@ Compete against another player online in real-time. The player who catches the m
 ## Technical Details
 
 ### Client-Side
+
 - Phaser.js for game rendering
 - Polling-based state synchronization
 - Smooth player movement with position updates
 
 ### Server-Side
+
 - Express.js API endpoints
 - In-memory game state management
 - Automatic game cleanup after completion
@@ -71,6 +77,7 @@ Compete against another player online in real-time. The player who catches the m
 ## Development
 
 Run the game in development mode:
+
 ```bash
 npm run dev
 ```
@@ -86,6 +93,7 @@ This will start the Devvit playtest environment where you can test both solo and
 ## Next Steps
 
 The current implementation uses placeholder rectangles for player characters. Future updates will include:
+
 - Custom character sprites (Cupcorn characters)
 - Catching animations
 - Sound effects

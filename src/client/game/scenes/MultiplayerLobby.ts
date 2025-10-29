@@ -6,7 +6,6 @@ import { ButtonFactory } from '../utils/ButtonFactory';
 
 export class MultiplayerLobby extends Scene {
   private background!: Phaser.GameObjects.Image;
-  private titleText!: Phaser.GameObjects.Text;
   private statusText!: Phaser.GameObjects.Text;
   private backButton!: Phaser.GameObjects.Text;
   private readyButton!: Phaser.GameObjects.Container | null;
@@ -48,7 +47,7 @@ export class MultiplayerLobby extends Scene {
     this.background.setAlpha(0.6);
 
     // Title
-    this.titleText = this.add
+    this.add
       .text(width / 2, height * 0.25, 'MULTIPLAYER LOBBY', {
         fontFamily: 'Arial Black',
         fontSize: '48px',
@@ -104,11 +103,11 @@ export class MultiplayerLobby extends Scene {
         this.backButton.setScale(1);
       })
       .on('pointerdown', () => {
-        this.leaveGame();
+        void this.leaveGame();
       });
 
     // Join game
-    this.joinGame();
+    void this.joinGame();
   }
 
   private async joinGame(): Promise<void> {
@@ -123,16 +122,14 @@ export class MultiplayerLobby extends Scene {
 
       const data = (await response.json()) as JoinGameResponse;
 
-      if (data.success) {
+      if (data.success && data.gameState) {
         this.gameId = data.gameState.gameId;
         this.playerId = data.playerId;
         this.playerRole = data.playerRole;
 
-
         // Always wait for opponent - never start immediately
         this.statusText.setText('Waiting for opponent...');
         this.pollForGameStart();
-
       } else {
         this.showError('Failed to join game.');
       }
@@ -190,7 +187,8 @@ export class MultiplayerLobby extends Scene {
           }
 
           // Check if both players are present
-          const bothPresent = data.gameState.player1Id !== null && data.gameState.player2Id !== null;
+          const bothPresent =
+            data.gameState.player1Id !== null && data.gameState.player2Id !== null;
 
           // If we had both players but now one is missing, restart matchmaking
           if (this.bothPlayersPresent && !bothPresent) {
@@ -204,17 +202,13 @@ export class MultiplayerLobby extends Scene {
             // Both players just joined - show ready button
             this.bothPlayersPresent = true;
             this.showReadyButton();
-            this.statusText.setText('Both players connected!\nClick Ready when you\'re prepared.');
+            this.statusText.setText("Both players connected!\nClick Ready when you're prepared.");
             this.tweens.killTweensOf(this.statusText);
             this.statusText.setAlpha(1);
           }
 
           // CRITICAL: Only start if status is 'playing' AND both players exist
-          if (
-            data.success &&
-            data.gameState.status === 'playing' &&
-            bothPresent
-          ) {
+          if (data.success && data.gameState.status === 'playing' && bothPresent) {
             console.log(`[Lobby] Game is now playing with both players! Starting game...`);
             this.pollTimer.remove();
             this.startMultiplayerGame();
@@ -252,7 +246,7 @@ export class MultiplayerLobby extends Scene {
 
     ButtonFactory.addHoverEffect(this, this.readyButton);
     ButtonFactory.addClickEffect(this, this.readyButton, () => {
-      this.sendReady();
+      void this.sendReady();
     });
     ButtonFactory.addFloatingEffect(this, this.readyButton, height * 0.6, 1000);
   }
@@ -367,7 +361,7 @@ export class MultiplayerLobby extends Scene {
     });
 
     // Join a new game
-    this.joinGame();
+    void this.joinGame();
   }
 
   private startMultiplayerGame(): void {
