@@ -8,6 +8,7 @@ interface GameOverData {
   player2Score: number;
   reason?: string; // 'completed' | 'disconnect'
   gameId?: string;
+  playerRole?: string; // 'player1' | 'player2'
 }
 
 export class MultiplayerGameOver extends Scene {
@@ -20,6 +21,10 @@ export class MultiplayerGameOver extends Scene {
 
   init(data: GameOverData) {
     this.gameId = data.gameId || null;
+
+    // Record only the current player's score to leaderboard
+    const myScore = data.playerRole === 'player1' ? data.player1Score : data.player2Score;
+    this.recordScore(myScore);
 
     // Switch back to menu music
     AudioManager.getInstance().init(this);
@@ -175,5 +180,18 @@ export class MultiplayerGameOver extends Scene {
     ButtonFactory.addClickEffect(this, mainMenuButton, () => {
       this.scene.start('MainMenu');
     });
+  }
+
+  private async recordScore(score: number): Promise<void> {
+    try {
+      await fetch('/api/leaderboard/record', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ score }),
+      });
+      console.log(`[MultiplayerGameOver] Score ${score} recorded to leaderboard`);
+    } catch (error) {
+      console.error('[MultiplayerGameOver] Error recording score to leaderboard:', error);
+    }
   }
 }

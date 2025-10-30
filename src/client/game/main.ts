@@ -7,6 +7,8 @@ import { SoloGameOver } from './scenes/SoloGameOver';
 import { MultiplayerLobby } from './scenes/MultiplayerLobby';
 import { MultiplayerGame } from './scenes/MultiplayerGame';
 import { MultiplayerGameOver } from './scenes/MultiplayerGameOver';
+import { Leaderboard } from './scenes/Leaderboard';
+import { Challenge } from './scenes/Challenge';
 import * as Phaser from 'phaser';
 import { AUTO, Game } from 'phaser';
 import { Preloader } from './scenes/Preloader';
@@ -36,6 +38,8 @@ const config: Phaser.Types.Core.GameConfig = {
     MainMenu,
     ModeSelect,
     HowToPlay,
+    Leaderboard,
+    Challenge,
     SoloGame,
     SoloGameOver,
     MultiplayerLobby,

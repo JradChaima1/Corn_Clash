@@ -9,12 +9,16 @@ import {
   UpdatePositionResponse,
   ReadyResult,
 } from '../shared/types/api';
-import { redis, createServer, context } from '@devvit/web/server';
+import { redis, createServer, context, reddit } from '@devvit/web/server';
 import { createPost } from './core/post';
 import { MultiplayerGameManager } from './core/multiplayer';
+import { LeaderboardManager } from './core/leaderboard';
+import { ChallengeManager } from './core/challenge';
 
 const app = express();
 const gameManager = MultiplayerGameManager.getInstance();
+const leaderboardManager = LeaderboardManager.getInstance();
+const challengeManager = ChallengeManager.getInstance();
 
 // Middleware for JSON body parsing
 app.use(express.json());
@@ -410,24 +414,235 @@ router.post<unknown, { success: boolean }>(
   }
 );
 
-router.post<unknown, { success: boolean }>(
-  '/api/multiplayer/end',
+// Leaderboard endpoints
+router.post<unknown, { success: boolean }, { score: number }>(
+  '/api/leaderboard/record',
   async (req, res): Promise<void> => {
     try {
-      const gameId = req.query.gameId as string;
+      const { userId } = context;
+      const { score } = req.body;
 
-      console.log(`[API] Ending game ${gameId}`);
+      if (!userId) {
+        res.status(401).json({ success: false });
+        return;
+      }
 
-      if (!gameId) {
+      if (score === undefined || score < 0) {
         res.status(400).json({ success: false });
         return;
       }
 
-      const success = await gameManager.endGame(gameId);
-      res.json({ success });
+      // Get Reddit username
+      let username: string = `user_${userId}`;
+      try {
+        const user = await reddit.getUserById(userId as `t2_${string}`);
+        if (user?.username) {
+          username = user.username;
+        }
+      } catch (error) {
+        console.error('[API] Error getting Reddit username:', error);
+      }
+
+      await leaderboardManager.recordScore(username, score);
+      
+      // Record match completion for daily challenge
+      await challengeManager.recordMatchCompletion(username);
+      
+      res.json({ success: true });
     } catch (error) {
-      console.error('Error ending game:', error);
+      console.error('[API] Error recording leaderboard score:', error);
       res.status(500).json({ success: false });
+    }
+  }
+);
+
+router.get<
+  unknown,
+  {
+    success: boolean;
+    data?: {
+      entries: Array<{ username: string; score: number; rank: number }>;
+      userRank: number | null;
+      userScore: number | null;
+      totalPlayers: number;
+    };
+  }
+>('/api/leaderboard/:period', async (req, res): Promise<void> => {
+  try {
+    const period = (req.params as { period: string }).period as 'daily' | 'weekly' | 'alltime';
+    const { userId } = context;
+
+    if (!['daily', 'weekly', 'alltime'].includes(period)) {
+      res.status(400).json({ success: false });
+      return;
+    }
+
+    // Get Reddit username
+    let username: string | undefined = undefined;
+    if (userId) {
+      try {
+        const user = await reddit.getUserById(userId as `t2_${string}`);
+        if (user?.username) {
+          username = user.username;
+        }
+      } catch (error) {
+        console.error('[API] Error getting Reddit username:', error);
+      }
+    }
+
+    const data = await leaderboardManager.getLeaderboard(period, username, 100);
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error('[API] Error getting leaderboard:', error);
+    res.status(500).json({ success: false });
+  }
+});
+
+router.get<
+  unknown,
+  {
+    success: boolean;
+    data?: {
+      daily: number | null;
+      weekly: number | null;
+      alltime: number | null;
+    };
+  }
+>('/api/leaderboard/ranks/me', async (_req, res): Promise<void> => {
+  try {
+    const { userId } = context;
+
+    if (!userId) {
+      res.status(401).json({ success: false });
+      return;
+    }
+
+    // Get Reddit username
+    let username: string = `user_${userId}`;
+    try {
+      const user = await reddit.getUserById(userId as `t2_${string}`);
+      if (user?.username) {
+        username = user.username;
+      }
+    } catch (error) {
+      console.error('[API] Error getting Reddit username:', error);
+    }
+
+    const data = await leaderboardManager.getUserRanks(username);
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error('[API] Error getting user ranks:', error);
+    res.status(500).json({ success: false });
+  }
+});
+
+router.get<
+  unknown,
+  {
+    success: boolean;
+    data?: {
+      totalPlayers: number;
+      totalScoresToday: number;
+      highestScoreToday: number;
+      topPlayerToday: string | null;
+    };
+  }
+>('/api/leaderboard/stats', async (_req, res): Promise<void> => {
+  try {
+    const data = await leaderboardManager.getCommunityStats();
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error('[API] Error getting community stats:', error);
+    res.status(500).json({ success: false });
+  }
+});
+
+router.post<unknown, { success: boolean; message: string }>(
+  '/api/leaderboard/clear',
+  async (_req, res): Promise<void> => {
+    try {
+      console.log('[API] Clearing all leaderboards');
+      await leaderboardManager.clearAllLeaderboards();
+      res.json({ success: true, message: 'All leaderboards cleared successfully' });
+    } catch (error) {
+      console.error('[API] Error clearing leaderboards:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: error instanceof Error ? error.message : 'Failed to clear leaderboards' 
+      });
+    }
+  }
+);
+
+// Challenge endpoints
+router.get<
+  unknown,
+  {
+    success: boolean;
+    data?: {
+      currentMatches: number;
+      goalMatches: number;
+      isCompleted: boolean;
+      contributorCount: number;
+      userContributed: boolean;
+    };
+  }
+>('/api/challenge/status', async (_req, res): Promise<void> => {
+  try {
+    const { userId } = context;
+
+    // Get Reddit username
+    let username: string | undefined = undefined;
+    if (userId) {
+      try {
+        const user = await reddit.getUserById(userId as `t2_${string}`);
+        if (user?.username) {
+          username = user.username;
+        }
+      } catch (error) {
+        console.error('[API] Error getting Reddit username:', error);
+      }
+    }
+
+    const data = await challengeManager.getChallengeStatus(username);
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error('[API] Error getting challenge status:', error);
+    res.status(500).json({ success: false });
+  }
+});
+
+router.get<
+  unknown,
+  {
+    success: boolean;
+    data?: {
+      contributors: string[];
+    };
+  }
+>('/api/challenge/contributors', async (_req, res): Promise<void> => {
+  try {
+    const contributors = await challengeManager.getContributors();
+    res.json({ success: true, data: { contributors } });
+  } catch (error) {
+    console.error('[API] Error getting contributors:', error);
+    res.status(500).json({ success: false });
+  }
+});
+
+router.post<unknown, { success: boolean; message: string }>(
+  '/api/challenge/reset',
+  async (_req, res): Promise<void> => {
+    try {
+      console.log('[API] Manually resetting challenge');
+      await challengeManager.clearChallenge();
+      res.json({ success: true, message: 'Challenge reset successfully' });
+    } catch (error) {
+      console.error('[API] Error resetting challenge:', error);
+      res.status(500).json({
+        success: false,
+        message: error instanceof Error ? error.message : 'Failed to reset challenge',
+      });
     }
   }
 );

@@ -71,11 +71,31 @@ export class MainMenu extends Scene {
       Phaser.Geom.Rectangle.Contains
     );
 
+    // Create Leaderboard button
+    const leaderboardButton = ButtonFactory.createButton(
+      this,
+      width / 2,
+      height * 0.78,
+      '🏆 Leaderboard',
+      0xfbbf24,
+      0xf59e0b,
+      240
+    );
+    leaderboardButton.setInteractive(
+      new Phaser.Geom.Rectangle(
+        -120,
+        -30,
+        240,
+        60
+      ) as unknown as Phaser.Types.Input.InputConfiguration,
+      Phaser.Geom.Rectangle.Contains
+    );
+
     // Create How to Play button
     this.howToPlayButton = ButtonFactory.createButton(
       this,
       width / 2,
-      height * 0.8,
+      height * 0.92,
       'How to Play',
       0xdc2626,
       0x991b1b,
@@ -93,10 +113,15 @@ export class MainMenu extends Scene {
 
     // Add button effects
     ButtonFactory.addHoverEffect(this, this.playButton);
+    ButtonFactory.addHoverEffect(this, leaderboardButton);
     ButtonFactory.addHoverEffect(this, this.howToPlayButton);
 
     ButtonFactory.addClickEffect(this, this.playButton, () => {
       this.scene.start('ModeSelect');
+    });
+
+    ButtonFactory.addClickEffect(this, leaderboardButton, () => {
+      this.scene.start('Leaderboard');
     });
 
     ButtonFactory.addClickEffect(this, this.howToPlayButton, () => {
@@ -105,6 +130,7 @@ export class MainMenu extends Scene {
 
     // Floating animations
     ButtonFactory.addFloatingEffect(this, this.playButton, height * 0.65, 1000);
-    ButtonFactory.addFloatingEffect(this, this.howToPlayButton, height * 0.8, 1200);
+    ButtonFactory.addFloatingEffect(this, leaderboardButton, height * 0.78, 1100);
+    ButtonFactory.addFloatingEffect(this, this.howToPlayButton, height * 0.92, 1200);
   }
 }

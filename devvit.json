@@ -32,5 +32,8 @@
   },
   "dev": {
     "subreddit": "corn_clash_dev"
+  },
+  "reddit": {
+    "enabled": true
   }
 }

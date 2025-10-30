@@ -87,9 +87,30 @@ export class ModeSelect extends Scene {
       })
       .setOrigin(0.5);
 
+    // Challenges Button
+    const challengesButton = ButtonFactory.createButton(
+      this,
+      width / 2,
+      height * 0.81,
+      '🎯 CHALLENGES',
+      0xfbbf24,
+      0xf59e0b,
+      260
+    );
+    challengesButton.setInteractive(
+      new Phaser.Geom.Rectangle(
+        -130,
+        -30,
+        260,
+        60
+      ) as unknown as Phaser.Types.Input.InputConfiguration,
+      Phaser.Geom.Rectangle.Contains
+    );
+
     // Add button effects
     ButtonFactory.addHoverEffect(this, this.soloButton);
     ButtonFactory.addHoverEffect(this, this.multiplayerButton);
+    ButtonFactory.addHoverEffect(this, challengesButton);
 
     ButtonFactory.addClickEffect(this, this.soloButton, () => {
       this.scene.start('SoloGame');
@@ -99,15 +120,20 @@ export class ModeSelect extends Scene {
       this.scene.start('MultiplayerLobby');
     });
 
+    ButtonFactory.addClickEffect(this, challengesButton, () => {
+      this.scene.start('Challenge');
+    });
+
     // Floating animations
     ButtonFactory.addFloatingEffect(this, this.soloButton, height * 0.45, 1000);
     ButtonFactory.addFloatingEffect(this, this.multiplayerButton, height * 0.65, 1200);
+    ButtonFactory.addFloatingEffect(this, challengesButton, height * 0.81, 1300);
 
     // Main Menu button (back to main menu)
     const mainMenuButton = ButtonFactory.createButton(
       this,
       width / 2,
-      height * 0.9,
+      height * 0.93,
       'Main Menu',
       0x22c55e,
       0x16a34a,
@@ -116,9 +142,9 @@ export class ModeSelect extends Scene {
     mainMenuButton.setInteractive(
       new Phaser.Geom.Rectangle(
         -110,
-        -30,
+        -25,
         220,
-        60
+        50
       ) as unknown as Phaser.Types.Input.InputConfiguration,
       Phaser.Geom.Rectangle.Contains
     );

@@ -18,6 +18,9 @@ export class SoloGameOver extends Scene {
   create(data: SoloGameOverData) {
     const { width, height } = this.scale;
 
+    // Record score to leaderboard
+    this.recordScore(data.score);
+
     // Switch back to menu music
     AudioManager.getInstance().init(this);
     AudioManager.getInstance().playMusic('menu_music', 0.3);
@@ -107,5 +110,18 @@ export class SoloGameOver extends Scene {
     ButtonFactory.addClickEffect(this, mainMenuButton, () => {
       this.scene.start('MainMenu');
     });
+  }
+
+  private async recordScore(score: number): Promise<void> {
+    try {
+      await fetch('/api/leaderboard/record', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ score }),
+      });
+      console.log(`[SoloGameOver] Score ${score} recorded to leaderboard`);
+    } catch (error) {
+      console.error('[SoloGameOver] Error recording score to leaderboard:', error);
+    }
   }
 }

@@ -786,6 +786,7 @@ export class MultiplayerGame extends Scene {
             player2Score: finalP2Score,
             gameId: this.gameId,
             reason: 'completed',
+            playerRole: this.playerRole,
           });
           return;
         }
@@ -819,6 +820,7 @@ export class MultiplayerGame extends Scene {
       player2Score: this.player2Score,
       gameId: this.gameId,
       reason: 'completed',
+      playerRole: this.playerRole,
     });
   }
 
@@ -984,6 +986,7 @@ export class MultiplayerGame extends Scene {
         player2Score: this.player2Score,
         reason: 'disconnect',
         gameId: this.gameId,
+        playerRole: this.playerRole,
       });
     });
   }
